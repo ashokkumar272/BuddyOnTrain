@@ -1,33 +1,23 @@
-import React, { useState } from "react";
+import React from "react";
 import TrainCard from "./TrainCard";
 import Suggestions from "./Suggestions";
+import { useTrainContext } from "../context/Context";
 
 const Hero = () => {
-  const [toStation, setToStation] = useState("");
-  const [fromStation, setFromStation] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [trains, setTrains] = useState([]);
-  const [list, setList] = useState(false);
-  const [suggestions, setSuggestions] = useState(false);
-
-  const searchTrains = async () => {
-    if (!fromStation || !toStation || !selectedDate) {
-      return;
-    }
-    const formattedDate = selectedDate.split("-").reverse().join("-");
-
-    const url = `http://localhost:4000/api/trains?from=${fromStation}&to=${toStation}&train_date=${formattedDate}`;
-
-    try {
-      const response = await fetch(url);
-      const result = await response.json();
-      console.log(result);
-      setTrains(result.data);
-    } catch (error) {
-      console.error("Error fetching trains:", error);
-      setTrains([]);
-    }
-  };
+  const {
+    toStation,
+    setToStation,
+    fromStation,
+    setFromStation,
+    selectedDate,
+    setSelectedDate,
+    trains,
+    list,
+    setList,
+    suggestions,
+    setSuggestions,
+    searchTrains,
+  } = useTrainContext();
 
   return (
     <div
@@ -82,16 +72,13 @@ const Hero = () => {
             {trains.length == 0 ? (
               <ul className="h-[500px] overflow-scroll shadow-y-md">
                 {/* {trains.map((train) => (
-                <TrainCard key={train.train_number} train={train} />
-              ))} */}
+                  <TrainCard key={train.train_number} train={train} />
+                ))} */}
 
+              {/* dummy data hardcoded */}
                 <TrainCard></TrainCard>
                 <TrainCard></TrainCard>
-                <TrainCard></TrainCard>
-                <TrainCard></TrainCard>
-                <TrainCard></TrainCard>
-                <TrainCard></TrainCard>
-                <TrainCard></TrainCard>
+                <TrainCard></TrainCard>    
               </ul>
             ) : (
               <p>No trains found.</p>
@@ -102,7 +89,7 @@ const Hero = () => {
 
       <div className="w-px h-[600px] bg-gray-400 flex justify-center"></div>
       {suggestions ? (
-        <div >
+        <div>
           <Suggestions
             suggestions={suggestions}
             setSuggestions={setSuggestions}
