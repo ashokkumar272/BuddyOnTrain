@@ -2,10 +2,12 @@ const express = require('express')
 const dotenv = require('dotenv')
 const path = require('path');
 const cors = require('cors');
-const trainRoute = require('./routes/findTrain');
-
+const trainRoute = require('./routes/findTrainRoute');
+const connectToDB = require('./config/db')
 
 dotenv.config()
+connectToDB()
+const PORT = process.env.PORT || 5000;
 
 const app = express()
 app.use(cors())
@@ -15,11 +17,12 @@ app.set('view engine', 'ejs')
 
 
 app.get('/', (req, res)=>{
-    res.render('index')
+    res.send("server running")
 })
 
 app.use('/api', trainRoute)
 
-app.listen(4000, ()=>{
-    console.log("server running")
-})
+const server = app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
+
