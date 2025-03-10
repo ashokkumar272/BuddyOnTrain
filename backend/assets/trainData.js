@@ -20,7 +20,7 @@ const mockTrains = [
     duration: "17:55",
     special_train: false,
     train_type: "RAJ",
-    train_date: "26-05-2023",
+    train_date: "10-03-2025",
     class_type: ["3A", "2A", "1A"],
   },
   {

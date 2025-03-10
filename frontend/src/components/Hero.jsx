@@ -69,17 +69,12 @@ const Hero = () => {
         </form>
         {list && (
           <div className="px-4">
-            {trains.length == 0 ? (
+            {trains.length > 0 ? (
               <ul className="h-[500px] overflow-scroll shadow-y-md">
-                {/* {trains.map((train) => (
+                {trains.map((train) => (
                   <TrainCard key={train.train_number} train={train} />
-                ))} */}
-
-              {/* dummy data hardcoded */}
-                <TrainCard></TrainCard>
-                <TrainCard></TrainCard>
-                <TrainCard></TrainCard>    
-              </ul>
+                ))}
+                </ul>
             ) : (
               <p>No trains found.</p>
             )}
