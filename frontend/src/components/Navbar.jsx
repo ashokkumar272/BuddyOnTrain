@@ -73,7 +73,6 @@ const Navbar = () => {
           <span className="text-gray-400">Loading...</span>
         ) : user ? (
           <>
-            <NavLink to="/dashboard" className='text-gray-600 hover:text-blue-600 transition-colors mr-3'>Dashboard</NavLink>
             <button 
               onClick={handleLogout} 
               className='text-gray-600 hover:text-red-600 transition-colors'

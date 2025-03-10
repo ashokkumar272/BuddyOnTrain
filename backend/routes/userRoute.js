@@ -6,7 +6,8 @@ const {
   logoutUser,
   getCurrentUser,
   updateProfile,
-  updateTravelStatus
+  updateTravelStatus,
+  findTravelBuddies
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -27,6 +28,9 @@ router.put('/profile', protect, updateProfile);
 
 // Update travel status (protected route)
 router.put('/travel-status', protect, updateTravelStatus);
+
+// Find travel buddies (optional authentication)
+router.get('/travel-buddies', findTravelBuddies);
 
 module.exports = router;
 

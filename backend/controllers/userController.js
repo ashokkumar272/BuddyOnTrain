@@ -249,6 +249,8 @@ const updateTravelStatus = async (req, res) => {
   try {
     const { boardingStation, destinationStation, travelDate, isActive } = req.body;
 
+    console.log('Update Travel Status - Request body:', req.body);
+    
     // Find user
     const user = await User.findById(req.user.id);
     
@@ -260,12 +262,58 @@ const updateTravelStatus = async (req, res) => {
     }
 
     // Update travel status
-    user.travelStatus = {
-      boardingStation: boardingStation || user.travelStatus.boardingStation,
-      destinationStation: destinationStation || user.travelStatus.destinationStation,
-      travelDate: travelDate || user.travelStatus.travelDate,
-      isActive: isActive !== undefined ? isActive : user.travelStatus.isActive
-    };
+    // Check if we're setting it to inactive/empty (unlisting)
+    if (isActive === false && boardingStation === "" && destinationStation === "" && travelDate === null) {
+      // Complete reset of travel status
+      user.travelStatus = {
+        boardingStation: "",
+        destinationStation: "",
+        travelDate: null,
+        isActive: false
+      };
+      
+      console.log('Update Travel Status - Resetting travel status to empty');
+    } else {
+      // Process the date to ensure it's stored consistently
+      let processedDate = travelDate;
+      
+      if (travelDate) {
+        try {
+          // If it's a string date, convert to proper Date object
+          if (typeof travelDate === 'string') {
+            processedDate = new Date(travelDate);
+            
+            // If invalid date, try parsing from DD-MM-YYYY format
+            if (isNaN(processedDate.getTime())) {
+              const dateParts = travelDate.split('-');
+              if (dateParts.length === 3) {
+                processedDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+              }
+            }
+            
+            console.log('Update Travel Status - Processed date:', {
+              original: travelDate,
+              processed: processedDate,
+              iso: processedDate.toISOString()
+            });
+          }
+        } catch (error) {
+          console.error('Error processing date:', error);
+          // Keep original date if processing fails
+          processedDate = travelDate;
+        }
+      }
+      
+      // Normal update preserving existing values when not provided
+      user.travelStatus = {
+        boardingStation: boardingStation !== undefined ? boardingStation.trim() : user.travelStatus.boardingStation,
+        destinationStation: destinationStation !== undefined ? destinationStation.trim() : user.travelStatus.destinationStation,
+        travelDate: processedDate !== undefined ? processedDate : user.travelStatus.travelDate,
+        isActive: isActive !== undefined ? isActive : user.travelStatus.isActive
+      };
+      
+      console.log('Update Travel Status - New travel status:', user.travelStatus);
+    }
     
     await user.save();
     
@@ -283,11 +331,135 @@ const updateTravelStatus = async (req, res) => {
   }
 };
 
+// Find travel buddies with matching travel status
+const findTravelBuddies = async (req, res) => {
+  try {
+    // Get the search parameters from query string
+    const { from, to, date } = req.query;
+    
+    console.log('Find Travel Buddies - Request params:', { from, to, date });
+
+    if (!from || !to || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required parameters: from, to, and date are required'
+      });
+    }
+
+    // Find users with matching travel status
+    // Exclude the current user from results if authenticated
+    let excludeUserId = null;
+    if (req.user) {
+      excludeUserId = req.user.id;
+      console.log('Find Travel Buddies - Excluding user:', excludeUserId);
+    }
+
+    // Parse date from input format (e.g., "25-05-2023")
+    console.log('Find Travel Buddies - Input date:', date);
+    
+    // First, try to create a date object directly
+    let dateObj = new Date(date);
+    console.log('Find Travel Buddies - Direct parsing result:', dateObj);
+    
+    // If direct parsing gives invalid date, try to parse from DD-MM-YYYY format
+    if (isNaN(dateObj.getTime())) {
+      const dateParts = date.split('-');
+      if (dateParts.length === 3) {
+        // Convert from DD-MM-YYYY to YYYY-MM-DD for proper Date parsing
+        dateObj = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+        console.log('Find Travel Buddies - Parsed from DD-MM-YYYY:', dateObj);
+      }
+    }
+    
+    // Set time to beginning of day
+    dateObj.setHours(0, 0, 0, 0);
+    const nextDay = new Date(dateObj);
+    nextDay.setHours(23, 59, 59, 999);
+    
+    console.log('Find Travel Buddies - Final date range:', {
+      start: dateObj,
+      end: nextDay,
+      startISO: dateObj.toISOString(),
+      endISO: nextDay.toISOString()
+    });
+
+    // Log actual travel status data in the database
+    const sampleUsers = await User.find({ 'travelStatus.isActive': true })
+      .limit(5)
+      .select('username travelStatus');
+    
+    console.log('Find Travel Buddies - Sample user travel data:', 
+      sampleUsers.map(u => ({
+        username: u.username,
+        boardingStation: u.travelStatus.boardingStation,
+        destinationStation: u.travelStatus.destinationStation,
+        travelDate: u.travelStatus.travelDate,
+        isActive: u.travelStatus.isActive
+      }))
+    );
+
+    // Create case-insensitive regex for station names
+    const fromRegex = new RegExp(`^${from}$`, 'i');
+    const toRegex = new RegExp(`^${to}$`, 'i');
+
+    // Build the query
+    const query = {
+      _id: excludeUserId ? { $ne: excludeUserId } : { $exists: true },
+      'travelStatus.isActive': true
+    };
+
+    // Use regex for case-insensitive station matching
+    query['travelStatus.boardingStation'] = fromRegex;
+    query['travelStatus.destinationStation'] = toRegex;
+
+    // Handle date comparison
+    // First find all users with active status
+    const activeUsers = await User.find(query).select('name username profession bio travelStatus');
+    
+    console.log(`Find Travel Buddies - Found ${activeUsers.length} users with matching stations`);
+
+    // Then filter by date manually to ensure exact date comparison (ignoring time)
+    const matchingUsers = activeUsers.filter(user => {
+      if (!user.travelStatus || !user.travelStatus.travelDate) return false;
+      
+      const userTravelDate = new Date(user.travelStatus.travelDate);
+      // Compare only year, month, and day
+      return userTravelDate.getFullYear() === dateObj.getFullYear() &&
+             userTravelDate.getMonth() === dateObj.getMonth() &&
+             userTravelDate.getDate() === dateObj.getDate();
+    });
+    
+    console.log(`Find Travel Buddies - After date filtering: ${matchingUsers.length} users match`);
+
+    // Return only necessary fields
+    const result = matchingUsers.map(user => ({
+      _id: user._id,
+      username: user.username,
+      name: user.name,
+      profession: user.profession,
+      bio: user.bio
+    }));
+
+    res.json({
+      success: true,
+      count: result.length,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in findTravelBuddies:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   getCurrentUser,
   updateProfile,
-  updateTravelStatus
+  updateTravelStatus,
+  findTravelBuddies
 };

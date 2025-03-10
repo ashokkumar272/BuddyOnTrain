@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import axiosInstance from '../utils/axios';
 
 const TrainContext = createContext();
 
@@ -9,6 +10,9 @@ export const TrainProvider = ({ children }) => {
   const [trains, setTrains] = useState([]);
   const [list, setList] = useState(false);
   const [suggestions, setSuggestions] = useState(false);
+  const [buddies, setBuddies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const searchTrains = async () => {
     if (!fromStation || !toStation || !selectedDate) {
@@ -24,6 +28,70 @@ export const TrainProvider = ({ children }) => {
     } catch (error) {
       console.error("Error fetching trains:", error);
       setTrains([]);
+    }
+  };
+
+  const findBuddies = async () => {
+    if (!fromStation || !toStation || !selectedDate) {
+      setError('Please fill in all search fields');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Format date for API request - using same format as searchTrains
+      // The backend will handle date parsing from this format
+      const formattedDate = selectedDate.split("-").reverse().join("-");
+      
+      console.log("Finding buddies with params:", {
+        from: fromStation,
+        to: toStation,
+        date: formattedDate,
+        originalDate: selectedDate
+      });
+      
+      // Log the date objects for debugging
+      console.log("Date objects:", {
+        originalDate: new Date(selectedDate),
+        formattedDate: new Date(formattedDate),
+        formattedDateParts: formattedDate.split('-')
+      });
+      
+      // Make API request to find travel buddies
+      const response = await axiosInstance.get('/api/users/travel-buddies', {
+        params: {
+          from: fromStation,
+          to: toStation,
+          date: formattedDate
+        }
+      });
+
+      console.log("Buddies response:", response.data);
+
+      if (response.data.success) {
+        if (response.data.data && Array.isArray(response.data.data)) {
+          setBuddies(response.data.data);
+          console.log("Setting buddies:", response.data.data);
+        } else {
+          setBuddies([]);
+          console.log("No buddies data in response or invalid format");
+        }
+        // Show suggestions panel
+        setSuggestions(true);
+      } else {
+        setError(response.data.message || 'Failed to find travel buddies');
+      }
+    } catch (error) {
+      console.error('Error finding travel buddies:', error);
+      setError(
+        error.response?.data?.message || 
+        'An error occurred. Please try again.'
+      );
+      setBuddies([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -43,6 +111,11 @@ export const TrainProvider = ({ children }) => {
         suggestions,
         setSuggestions,
         searchTrains,
+        buddies,
+        setBuddies,
+        findBuddies,
+        loading,
+        error
       }}
     >
       {children}

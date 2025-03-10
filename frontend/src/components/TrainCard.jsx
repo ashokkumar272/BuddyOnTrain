@@ -1,6 +1,172 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import axiosInstance from "../utils/axios";
 
 const TrainCard = ({ train }) => {
+  const [isListing, setIsListing] = useState(false);
+  const [listingError, setListingError] = useState(null);
+  const [listingSuccess, setListingSuccess] = useState(false);
+  const [isListed, setIsListed] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [unlistSuccess, setUnlistSuccess] = useState(false);
+
+  // Check if user is already listed on this train
+  useEffect(() => {
+    const checkUserListing = async () => {
+      try {
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        // Get user data to check current travel status
+        const response = await axiosInstance.get('/api/users/me');
+        
+        if (response.data.success) {
+          setUserData(response.data.user);
+          
+          const travelStatus = response.data.user.travelStatus;
+          
+          // Check if user is listed on this train
+          if (travelStatus && 
+              travelStatus.isActive && 
+              travelStatus.boardingStation === train.from && 
+              travelStatus.destinationStation === train.to) {
+            
+            // Compare dates (only compare the date part)
+            const trainDate = new Date(train.train_date);
+            const userDate = new Date(travelStatus.travelDate);
+            
+            if (trainDate.toDateString() === userDate.toDateString()) {
+              setIsListed(true);
+              setListingSuccess(true);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking user listing:", error);
+      }
+    };
+
+    checkUserListing();
+  }, [train]);
+
+  const handleListYourself = async () => {
+    setIsListing(true);
+    setListingError(null);
+    setUnlistSuccess(false);
+    
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setListingError("Please login to list yourself on this train");
+        setIsListing(false);
+        return;
+      }
+
+      // If already listed, unlist
+      if (isListed) {
+        // Create travel status data with all fields blank/empty
+        const travelStatusData = {
+          boardingStation: "",
+          destinationStation: "",
+          travelDate: null,
+          isActive: false
+        };
+
+        // Make API request to update travel status (unlist)
+        const response = await axiosInstance.put(
+          '/api/users/travel-status',
+          travelStatusData
+        );
+
+        if (response.data.success) {
+          setIsListed(false);
+          setListingSuccess(false);
+          setUnlistSuccess(true);
+          // Clear the unlist success message after 3 seconds
+          setTimeout(() => {
+            setUnlistSuccess(false);
+          }, 3000);
+        } else {
+          setListingError("Failed to unlist from this train");
+        }
+      } else {
+        // Format the train date correctly - to ensure it matches the format expected when searching
+        let trainDate;
+        
+        try {
+          // Parse the train date string to ensure consistent format
+          // First, handle common formats like "DD-MM-YYYY" or "YYYY-MM-DD"
+          if (typeof train.train_date === 'string') {
+            // Check if it's already a valid date string
+            const directDate = new Date(train.train_date);
+            
+            if (!isNaN(directDate.getTime())) {
+              // Valid date object
+              trainDate = directDate;
+            } else {
+              // Try to parse from DD-MM-YYYY format
+              const dateParts = train.train_date.split('-');
+              if (dateParts.length === 3) {
+                // If in DD-MM-YYYY format, convert to YYYY-MM-DD for proper storing
+                trainDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+              } else {
+                // Default to current date if parsing fails
+                trainDate = new Date();
+              }
+            }
+          } else {
+            // Default to current date if not a string
+            trainDate = new Date();
+          }
+          
+          console.log('Listing user with date:', {
+            original: train.train_date,
+            parsed: trainDate,
+            isoString: trainDate.toISOString()
+          });
+        } catch (error) {
+          console.error('Error parsing train date:', error);
+          trainDate = new Date(); // Default to current date on error
+        }
+
+        // Create travel status data to list on train
+        const travelStatusData = {
+          boardingStation: train.from,
+          destinationStation: train.to,
+          travelDate: trainDate,
+          isActive: true
+        };
+
+        console.log('Updating travel status with:', travelStatusData);
+
+        // Make API request to update travel status (list)
+        const response = await axiosInstance.put(
+          '/api/users/travel-status',
+          travelStatusData
+        );
+
+        if (response.data.success) {
+          setIsListed(true);
+          setListingSuccess(true);
+          console.log('Successfully listed on train:', response.data);
+        } else {
+          setListingError("Failed to list yourself on this train");
+        }
+      }
+    } catch (error) {
+      console.error('Error updating travel status:', error);
+      setListingError(
+        error.response?.data?.message || 
+        "An error occurred. Please try again."
+      );
+    } finally {
+      setIsListing(false);
+    }
+  };
+
   return (
       <li
         key={train.train_number}
@@ -61,63 +227,44 @@ const TrainCard = ({ train }) => {
             </div>
           </div>
         </div>
+
+        {/* List/Unlist Button and Status */}
+        <div className="mt-4 flex justify-center">
+          {isListed && listingSuccess ? (
+            <div className="flex flex-col items-center">
+              <div className="text-green-600 font-medium mb-2">
+                You are listed on this train! Fellow travelers can find you.
+              </div>
+              <button
+                onClick={handleListYourself}
+                disabled={isListing}
+                className="bg-red-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-red-700 transition-all disabled:bg-red-300"
+              >
+                {isListing ? "Processing..." : "Unlist Yourself"}
+              </button>
+            </div>
+          ) : unlistSuccess ? (
+            <div className="text-blue-600 font-medium">
+              You have been unlisted from this train successfully!
+            </div>
+          ) : (
+            <button
+              onClick={handleListYourself}
+              disabled={isListing}
+              className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-all disabled:bg-blue-300"
+            >
+              {isListing ? "Processing..." : "List Yourself"}
+            </button>
+          )}
+        </div>
+        
+        {/* Error message */}
+        {listingError && (
+          <div className="mt-2 text-red-600 text-center">
+            {listingError}
+          </div>
+        )}
       </li>
-
-//     <li class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-//       <div class="flex justify-between items-start mb-4">
-//         <div>
-//           <h3 class="text-lg font-semibold text-gray-800 mb-1">
-//             MUMBAI BANDRA T - SMVD KATRA Swaraj SF Express
-//             <span class="text-blue-600 font-medium">(12471)</span>
-//           </h3>
-//           <div class="flex items-center space-x-2 text-sm text-gray-600">
-//             <span class="bg-green-100 text-green-700 px-2 py-1 rounded">
-//               17:59
-//             </span>
-//             <span>26-05-2023</span>
-//           </div>
-//         </div>
-//         <div class="flex flex-col items-end space-y-1">
-//           <span class="text-sm font-medium text-gray-700">Class</span>
-//           <div class="flex space-x-1">
-//             <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-//               SL
-//             </span>
-//             <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-//               3A
-//             </span>
-//             <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-//               2A
-//             </span>
-//             <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-//               1A
-//             </span>
-//           </div>
-//         </div>
-//       </div>
-
-//       <div class="flex justify-between">
-//         <div class="space-y-2">
-//           <p class="font-medium text-gray-900">BORIVALI (BVI)</p>
-//           <div class="text-sm text-gray-600">
-//             <p>Departure: 11:26</p>
-//             <p>Scheduled Arrival: 11:23</p>
-//           </div>
-//         </div>
-
-//         <div class="text-center">
-//           <div class="w-8 h-px bg-gray-300 mt-3"></div>
-//         </div>
-
-//         <div class="space-y-2 text-right">
-//           <p class="font-medium text-gray-900">NEW DELHI (NDLS)</p>
-//           <div class="text-sm text-gray-600">
-//             <p>Scheduled Arrival: 05:25</p>
-//             <p>Departure: 05:40</p>
-//           </div>
-//         </div>
-//       </div>
-//     </li>
   );
 };
 

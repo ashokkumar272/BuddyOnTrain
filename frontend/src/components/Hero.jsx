@@ -17,7 +17,15 @@ const Hero = () => {
     suggestions,
     setSuggestions,
     searchTrains,
+    findBuddies,
+    loading,
+    error
   } = useTrainContext();
+
+  const handleFindBuddy = (e) => {
+    e.preventDefault();
+    findBuddies();
+  };
 
   return (
     <div
@@ -60,13 +68,19 @@ const Hero = () => {
           </button>
           {!suggestions ? (
             <button
-              onClick={() => setSuggestions((prev) => !prev)}
+              onClick={handleFindBuddy}
               className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-all"
+              type="button"
             >
               Find Buddy
             </button>
           ) : null}
         </form>
+        {error && (
+          <div className="mt-2 text-red-600 text-center">
+            {error}
+          </div>
+        )}
         {list && (
           <div className="px-4">
             {trains.length > 0 ? (
