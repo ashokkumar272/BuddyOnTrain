@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance, { isAuthenticated } from '../utils/axios';
-import TravelStatusForm from '../components/TravelStatusForm';
 import Navbar from '../components/Navbar';
 
 const Dashboard = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showTravelForm, setShowTravelForm] = useState(false);
   const [friendRequests, setFriendRequests] = useState({ incoming: [], outgoing: [] });
   const [friends, setFriends] = useState([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
@@ -111,9 +109,8 @@ const Dashboard = () => {
   
   const handleCancelRequest = async (requestId) => {
     try {
-      const response = await axiosInstance.post('/api/friends/respond', {
-        requestId,
-        status: 'rejected'
+      const response = await axiosInstance.post('/api/friends/cancel', {
+        requestId
       });
       
       if (response.data.success) {
@@ -235,52 +232,38 @@ const Dashboard = () => {
         </div>
         
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-700">Travel Status</h2>
-            <button 
-              onClick={() => setShowTravelForm(!showTravelForm)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-            >
-              {showTravelForm ? 'Cancel' : 'Update Travel Status'}
-            </button>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Your Travel Status</h2>
           </div>
           
-          {showTravelForm ? (
-            <TravelStatusForm 
-              onClose={() => setShowTravelForm(false)} 
-              currentTravelStatus={userData.travelStatus}
-              onUpdateSuccess={handleTravelStatusUpdate}
-            />
-          ) : (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Travel Status</p>
-                  <p className="text-lg text-gray-800">
-                    {userData.travelStatus?.isActive ? 'Active' : 'Inactive'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Travel Date</p>
-                  <p className="text-lg text-gray-800">
-                    {userData.travelStatus?.travelDate ? formatDate(userData.travelStatus.travelDate) : 'Not set'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Boarding Station</p>
-                  <p className="text-lg text-gray-800">
-                    {userData.travelStatus?.boardingStation || 'Not set'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Destination Station</p>
-                  <p className="text-lg text-gray-800">
-                    {userData.travelStatus?.destinationStation || 'Not set'}
-                  </p>
-                </div>
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Travel Status</p>
+                <p className="text-lg text-gray-800">
+                  {userData.travelStatus?.isActive ? 'Active' : 'Inactive'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Travel Date</p>
+                <p className="text-lg text-gray-800">
+                  {userData.travelStatus?.travelDate ? formatDate(userData.travelStatus.travelDate) : 'Not set'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Boarding Station</p>
+                <p className="text-lg text-gray-800">
+                  {userData.travelStatus?.boardingStation || 'Not set'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Destination Station</p>
+                <p className="text-lg text-gray-800">
+                  {userData.travelStatus?.destinationStation || 'Not set'}
+                </p>
               </div>
             </div>
-          )}
+          </div>
         </div>
         
         {/* Friend Requests Section */}
