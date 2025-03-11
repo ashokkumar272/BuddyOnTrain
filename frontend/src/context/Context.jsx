@@ -72,8 +72,14 @@ export const TrainProvider = ({ children }) => {
 
       if (response.data.success) {
         if (response.data.data && Array.isArray(response.data.data)) {
-          setBuddies(response.data.data);
-          console.log("Setting buddies:", response.data.data);
+          // Get current user ID from localStorage
+          const currentUserId = localStorage.getItem('userId');
+          
+          // Filter out the current user from the buddies list
+          const filteredBuddies = response.data.data.filter(buddy => buddy._id !== currentUserId);
+          
+          setBuddies(filteredBuddies);
+          console.log("Setting buddies (filtered):", filteredBuddies);
         } else {
           setBuddies([]);
           console.log("No buddies data in response or invalid format");

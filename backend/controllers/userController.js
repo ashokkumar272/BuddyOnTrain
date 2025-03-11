@@ -176,7 +176,8 @@ const getCurrentUser = async (req, res) => {
           bio: user.bio,
           travelStatus: user.travelStatus,
           online: user.online,
-          lastSeen: user.lastSeen
+          lastSeen: user.lastSeen,
+          friends: user.friends || []
         }
       });
     } else {
@@ -349,9 +350,13 @@ const findTravelBuddies = async (req, res) => {
     // Find users with matching travel status
     // Exclude the current user from results if authenticated
     let excludeUserId = null;
+    let currentUser = null;
     if (req.user) {
       excludeUserId = req.user.id;
       console.log('Find Travel Buddies - Excluding user:', excludeUserId);
+      
+      // Get current user for friendship check
+      currentUser = await User.findById(excludeUserId);
     }
 
     // Parse date from input format (e.g., "25-05-2023")
@@ -414,7 +419,7 @@ const findTravelBuddies = async (req, res) => {
 
     // Handle date comparison
     // First find all users with active status
-    const activeUsers = await User.find(query).select('name username profession bio travelStatus');
+    const activeUsers = await User.find(query).select('name username profession bio travelStatus friends');
     
     console.log(`Find Travel Buddies - Found ${activeUsers.length} users with matching stations`);
 
@@ -431,14 +436,26 @@ const findTravelBuddies = async (req, res) => {
     
     console.log(`Find Travel Buddies - After date filtering: ${matchingUsers.length} users match`);
 
-    // Return only necessary fields
-    const result = matchingUsers.map(user => ({
-      _id: user._id,
-      username: user.username,
-      name: user.name,
-      profession: user.profession,
-      bio: user.bio
-    }));
+    // Return only necessary fields and add isFriend flag
+    const result = matchingUsers.map(user => {
+      // Check if this user is a friend of the current user
+      let isFriend = false;
+      
+      if (currentUser && currentUser.friends && currentUser.friends.length > 0) {
+        // Convert all IDs to strings for reliable comparison
+        const currentUserFriendIds = currentUser.friends.map(id => id.toString());
+        isFriend = currentUserFriendIds.includes(user._id.toString());
+      }
+      
+      return {
+        _id: user._id,
+        username: user.username,
+        name: user.name,
+        profession: user.profession,
+        bio: user.bio,
+        isFriend // Include friendship status
+      };
+    });
 
     res.json({
       success: true,
@@ -454,6 +471,84 @@ const findTravelBuddies = async (req, res) => {
   }
 };
 
+// Get user by ID
+const getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Find user by ID and exclude password
+    const user = await User.findById(userId).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Error in getUserById:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+// Get user's friends with details
+const getUserFriends = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Find the user and get their friends array
+    const user = await User.findById(userId).select('friends');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (!user.friends || user.friends.length === 0) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+
+    // Fetch details for each friend
+    const friends = await User.find({
+      _id: { $in: user.friends }
+    }).select('-password');
+
+    // Return friends with relevant fields
+    const friendsData = friends.map(friend => ({
+      _id: friend._id,
+      username: friend.username,
+      name: friend.name,
+      profession: friend.profession,
+      online: friend.online,
+      lastSeen: friend.lastSeen
+    }));
+
+    res.json({
+      success: true,
+      data: friendsData
+    });
+  } catch (error) {
+    console.error('Error in getUserFriends:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -461,5 +556,7 @@ module.exports = {
   getCurrentUser,
   updateProfile,
   updateTravelStatus,
-  findTravelBuddies
+  findTravelBuddies,
+  getUserById,
+  getUserFriends
 };

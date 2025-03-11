@@ -6,6 +6,8 @@ import axiosInstance, { removeToken, isAuthenticated } from '../utils/axios'
 const Navbar = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [invitations, setInvitations] = useState([])
+  const [showNotifications, setShowNotifications] = useState(false)
   const navigate = useNavigate()
 
   // Fetch current user data from the API
@@ -19,6 +21,8 @@ const Navbar = () => {
       const response = await axiosInstance.get('/api/users/me')
       if (response.data.success) {
         setUser(response.data.user)
+        // After fetching user data, get friend requests
+        fetchFriendRequests()
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -31,9 +35,65 @@ const Navbar = () => {
     }
   }
 
+  // Fetch friend requests
+  const fetchFriendRequests = async () => {
+    try {
+      const response = await axiosInstance.get('/api/friends/requests')
+      if (response.data.success) {
+        // Store incoming requests
+        setInvitations(response.data.data.incoming || [])
+      }
+    } catch (error) {
+      console.error('Error fetching friend requests:', error)
+    }
+  }
+
+  // Handle accepting a friend request
+  const handleAcceptInvite = async (requestId) => {
+    try {
+      const response = await axiosInstance.post('/api/friends/respond', {
+        requestId,
+        status: 'accepted'
+      })
+      
+      if (response.data.success) {
+        // Remove this invitation from the list
+        setInvitations(prev => prev.filter(inv => inv._id !== requestId))
+      }
+    } catch (error) {
+      console.error('Error accepting invitation:', error)
+    }
+  }
+
+  // Handle rejecting a friend request
+  const handleRejectInvite = async (requestId) => {
+    try {
+      const response = await axiosInstance.post('/api/friends/respond', {
+        requestId,
+        status: 'rejected'
+      })
+      
+      if (response.data.success) {
+        // Remove this invitation from the list
+        setInvitations(prev => prev.filter(inv => inv._id !== requestId))
+      }
+    } catch (error) {
+      console.error('Error rejecting invitation:', error)
+    }
+  }
+
   // Check authentication status and fetch user data on component mount
   useEffect(() => {
     fetchUserData()
+    
+    // Set up periodic refresh of friend requests (every 30 seconds)
+    const interval = setInterval(() => {
+      if (isAuthenticated()) {
+        fetchFriendRequests()
+      }
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   const handleLogout = async () => {
@@ -61,32 +121,119 @@ const Navbar = () => {
     }
   }
 
+  // Toggle notifications panel
+  const toggleNotifications = () => {
+    setShowNotifications(prev => !prev)
+  }
+
+  // Navigate to user's dashboard
+  const goToDashboard = () => {
+    navigate('/dashboard')
+  }
+
   return (
-    <>
-    <div className='flex justify-around py-6'>
-      <h2 className='text-4xl font-bold text-gray-600'>FindBuddy</h2>
-      <ul className='flex gap-3'>
-        
-        <NavLink to="/" className='text-gray-600 hover:text-blue-600 transition-colors'>Home</NavLink>
-        
-        {loading ? (
-          <span className="text-gray-400">Loading...</span>
-        ) : user ? (
-          <>
-            <button 
-              onClick={handleLogout} 
-              className='text-gray-600 hover:text-red-600 transition-colors'
-            >
-              Logout ({user.username})
-            </button>
-          </>
-        ) : (
-          <NavLink to="/login" className='text-gray-600 hover:text-blue-600 transition-colors'>Login</NavLink>
-        )}
-        
-      </ul>
+    <div className='relative shadow-md bg-white'>
+      <div className='flex justify-between items-center py-4 px-6 container mx-auto'>
+        <h2 className='text-2xl lg:text-4xl font-bold text-blue-600'>FindBuddy</h2>
+        <div className='flex items-center gap-4'>
+          <NavLink to="/" className='text-gray-600 hover:text-blue-600 transition-colors'>Home</NavLink>
+          
+          {loading ? (
+            <span className="text-gray-400">Loading...</span>
+          ) : user ? (
+            <>
+              {/* Notification Bell */}
+              <div className="relative">
+                <button 
+                  onClick={toggleNotifications}
+                  className='text-gray-600 hover:text-blue-600 transition-colors relative'
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  
+                  {/* Notification Badge - only show if there are invitations */}
+                  {invitations.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {invitations.length}
+                    </span>
+                  )}
+                </button>
+                
+                {/* Notification Panel */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50 overflow-hidden">
+                    <div className="py-2 px-4 bg-gray-100 border-b border-gray-200">
+                      <h3 className="text-sm font-semibold text-gray-700">Notifications</h3>
+                    </div>
+                    
+                    <div className="max-h-96 overflow-y-auto">
+                      {invitations.length > 0 ? (
+                        <div>
+                          {invitations.map(invitation => (
+                            <div key={invitation._id} className="py-2 px-4 border-b border-gray-100 hover:bg-gray-50">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    <span className="font-semibold">{invitation.sender.name || invitation.sender.username}</span> sent you a friend request
+                                  </p>
+                                  {invitation.sender.profession && (
+                                    <p className="text-xs text-gray-500 mt-1">{invitation.sender.profession}</p>
+                                  )}
+                                </div>
+                                <div className="flex gap-2 ml-2">
+                                  <button 
+                                    onClick={() => handleAcceptInvite(invitation._id)}
+                                    className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition-colors"
+                                  >
+                                    Accept
+                                  </button>
+                                  <button 
+                                    onClick={() => handleRejectInvite(invitation._id)}
+                                    className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-6 text-center text-gray-500">
+                          No new notifications
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* User Menu */}
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={goToDashboard}
+                  className='text-gray-600 hover:text-blue-600 transition-colors'
+                >
+                  Dashboard
+                </button>
+                <button 
+                  onClick={handleLogout} 
+                  className='text-gray-600 hover:text-red-600 transition-colors'
+                >
+                  Logout
+                </button>
+                <span className="text-gray-900 font-medium ml-1">
+                  ({user.username})
+                </span>
+              </div>
+            </>
+          ) : (
+            <NavLink to="/login" className='text-gray-600 hover:text-blue-600 transition-colors'>Login</NavLink>
+          )}
+        </div>
+      </div>
     </div>
-    </>
   )
 }
 

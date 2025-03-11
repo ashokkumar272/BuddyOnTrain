@@ -7,7 +7,9 @@ const {
   getCurrentUser,
   updateProfile,
   updateTravelStatus,
-  findTravelBuddies
+  findTravelBuddies,
+  getUserById,
+  getUserFriends
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -29,8 +31,14 @@ router.put('/profile', protect, updateProfile);
 // Update travel status (protected route)
 router.put('/travel-status', protect, updateTravelStatus);
 
-// Find travel buddies (optional authentication)
-router.get('/travel-buddies', findTravelBuddies);
+// Get user by ID (protected route)
+router.get('/profile/:id', protect, getUserById);
+
+// Get user's friends with details (protected route)
+router.get('/friends', protect, getUserFriends);
+
+// Find travel buddies (protected route)
+router.get('/travel-buddies', protect, findTravelBuddies);
 
 module.exports = router;
 

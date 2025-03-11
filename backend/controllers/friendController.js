@@ -121,39 +121,52 @@ const respondToFriendRequest = async (req, res) => {
       });
     }
 
-    // Check if the user is the receiver of the request
-    if (friendRequest.receiver.toString() !== userId) {
+    // Check if the user is the receiver of the request or the sender (if rejecting/canceling)
+    const isSender = friendRequest.sender.toString() === userId;
+    const isReceiver = friendRequest.receiver.toString() === userId;
+    
+    // Only allow sender to cancel their own request (reject), or receiver to accept/reject
+    if (!(isReceiver || (isSender && status === 'rejected'))) {
       return res.status(403).json({
         success: false,
-        message: 'You are not authorized to respond to this request'
+        message: 'You are not authorized to perform this action'
       });
     }
 
-    // Update request status
-    friendRequest.status = status;
-    await friendRequest.save();
+    if (status === 'rejected' && isSender) {
+      // If sender is canceling the request, delete it
+      await FriendRequest.findByIdAndDelete(requestId);
+      
+      return res.json({
+        success: true,
+        message: 'Friend request canceled successfully'
+      });
+    } else {
+      // Update request status (for receiver accepting/rejecting)
+      friendRequest.status = status;
+      await friendRequest.save();
+      
+      // If accepted, add each user to the other's friends list
+      if (status === 'accepted') {
+        const sender = await User.findById(friendRequest.sender);
+        const receiver = await User.findById(friendRequest.receiver);
 
-    // If accepted, add each user to the other's friends list
-    if (status === 'accepted') {
-      const sender = await User.findById(friendRequest.sender);
-      const receiver = await User.findById(friendRequest.receiver);
+        if (!sender.friends.includes(receiver._id)) {
+          sender.friends.push(receiver._id);
+          await sender.save();
+        }
 
-      if (!sender.friends.includes(receiver._id)) {
-        sender.friends.push(receiver._id);
-        await sender.save();
+        if (!receiver.friends.includes(sender._id)) {
+          receiver.friends.push(sender._id);
+          await receiver.save();
+        }
       }
-
-      if (!receiver.friends.includes(sender._id)) {
-        receiver.friends.push(sender._id);
-        await receiver.save();
-      }
+      
+      return res.json({
+        success: true,
+        message: `Friend request ${status} successfully`
+      });
     }
-
-    res.json({
-      success: true,
-      message: `Friend request ${status}`,
-      data: friendRequest
-    });
   } catch (error) {
     console.error('Error in respondToFriendRequest:', error);
     res.status(500).json({

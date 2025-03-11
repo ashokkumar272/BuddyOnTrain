@@ -5,6 +5,8 @@ import { useTrainContext } from "../context/Context";
 const Suggestions = ({ suggestions, setSuggestions }) => {
   const { buddies, loading } = useTrainContext();
 
+  console.log("Rendering Suggestions with buddies:", buddies);
+
   return (
     <div className="w-[400px] bg-white p-4 rounded-lg shadow-md">
       <div className="flex justify-between p-6 bg-gray-100 rounded-lg shadow-md">
@@ -25,7 +27,8 @@ const Suggestions = ({ suggestions, setSuggestions }) => {
               key={buddy._id} 
               id={buddy._id}
               name={buddy.name || buddy.username} 
-              profession={buddy.profession} 
+              profession={buddy.profession}
+              isFriend={buddy.isFriend} 
             />
           ))
         ) : (
