@@ -4,9 +4,9 @@ BuddyOnTrain is a web application that helps train travelers find companions for
 
 ## Dummy Search
 
-fromStation - CSMT
-toStation - NZM
-date - 10/03/2025
+- **fromStation** - CSMT
+- **toStation** - NZM
+- **date** - 10/03/2025
 
 ## Features
 
