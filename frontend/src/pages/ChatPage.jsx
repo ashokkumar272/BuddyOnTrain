@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance, { isAuthenticated } from '../utils/axios';
 import Navbar from '../components/Navbar';
+import io from 'socket.io-client';
+
+// Initialize WebSocket connection
+const socket = io('http://localhost:4000');
 
 const ChatPage = () => {
   const { userId } = useParams();
@@ -9,6 +13,16 @@ const ChatPage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom of messages
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -17,8 +31,50 @@ const ChatPage = () => {
       return;
     }
     
+    // Get current user's ID
+    const loggedInUserId = localStorage.getItem('userId');
+    if (loggedInUserId) {
+      setCurrentUserId(loggedInUserId);
+      
+      // Join the chat room
+      socket.emit('joinChat', loggedInUserId);
+    }
+    
     fetchUserData();
+    fetchChatHistory();
+    
+    // Setup socket event listeners
+    socket.on('receiveMessage', (message) => {
+      // Only add the message if it's from the current chat user
+      if (message.sender === userId || message.receiver === userId) {
+        setMessages(prevMessages => [...prevMessages, message]);
+        
+        // Mark the message as read
+        markMessagesAsRead();
+      }
+    });
+    
+    socket.on('messageSent', (message) => {
+      // Add the sent message to the messages list
+      setMessages(prevMessages => [...prevMessages, message]);
+    });
+    
+    socket.on('messageError', (error) => {
+      console.error('Message error:', error);
+    });
+    
+    // Clean up socket connection on unmount
+    return () => {
+      socket.off('receiveMessage');
+      socket.off('messageSent');
+      socket.off('messageError');
+    };
   }, [userId, navigate]);
+  
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const fetchUserData = async () => {
     try {
@@ -34,6 +90,54 @@ const ChatPage = () => {
       setError('An error occurred while loading user data');
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const fetchChatHistory = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/messages/${userId}`);
+      
+      if (response.data.success) {
+        setMessages(response.data.data || []);
+        
+        // Mark messages as read when chat is opened
+        markMessagesAsRead();
+      }
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+    }
+  };
+  
+  const markMessagesAsRead = async () => {
+    try {
+      await axiosInstance.put(`/api/messages/${userId}/read`);
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  };
+
+  // Function to send a message
+  const sendMessage = () => {
+    if (!newMessage.trim() || !currentUserId || !user) return;
+    
+    setSending(true);
+    
+    const message = {
+      sender: currentUserId,
+      receiver: userId,
+      content: newMessage,
+      timestamp: new Date()
+    };
+    
+    socket.emit('sendMessage', message);
+    setNewMessage('');
+    setSending(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
@@ -73,14 +177,51 @@ const ChatPage = () => {
           </div>
           
           <div className="p-6">
-            <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
-              <p className="text-yellow-700">
-                <strong>Note:</strong> Chat functionality is coming soon! This is just a placeholder for now.
-              </p>
+            <div className="bg-gray-100 p-4 rounded-lg min-h-[300px] max-h-[500px] overflow-y-auto">
+              {messages.length > 0 ? (
+                messages.map((msg, index) => (
+                  <div 
+                    key={index} 
+                    className={`mb-2 p-3 rounded-lg max-w-[80%] ${
+                      msg.sender === currentUserId 
+                        ? 'bg-blue-500 text-white ml-auto' 
+                        : 'bg-gray-300 text-black'
+                    }`}
+                  >
+                    <p className="break-words">{msg.content}</p>
+                    <span className={`text-xs ${msg.sender === currentUserId ? 'text-blue-100' : 'text-gray-600'} block mt-1`}>
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <p className="text-gray-500">No messages yet. Start the conversation!</p>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
             
-            <div className="bg-gray-100 p-4 rounded-lg min-h-[300px] flex items-center justify-center">
-              <p className="text-gray-500 text-lg">Chat interface will be implemented in a future update.</p>
+            <div className="mt-4">
+              <div className="flex">
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="flex-grow border border-gray-300 p-2 rounded-l-lg focus:outline-none resize-none"
+                  placeholder="Type a message..."
+                  rows={2}
+                  disabled={sending}
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={sending || !newMessage.trim()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700 disabled:bg-blue-300"
+                >
+                  {sending ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Press Enter to send, Shift+Enter for new line</p>
             </div>
             
             <div className="mt-4 flex justify-between">
