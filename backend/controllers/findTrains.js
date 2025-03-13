@@ -1,5 +1,5 @@
 const trains = require("../assets/trainData");
-// import axios from 'axios';
+const axios = require('axios');
 
 const findTrains = async (req, res) => {
   const { from, to, train_date } = req.query;
@@ -12,52 +12,61 @@ const findTrains = async (req, res) => {
     });
   }
 
+  try {
+    // Format date: from DD-MM-YYYY to YYYY-MM-DD
+    const dateParts = train_date.split('-');
+    const formattedDate = dateParts.length === 3 ? 
+      `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : 
+      train_date;
 
-// const options = {
-//   method: 'GET',
-//   url: 'https://irctc1.p.rapidapi.com/api/v3/trainBetweenStations',
-//   params: {
-//     fromStationCode: 'BVI',
-//     toStationCode: 'NDLS',
-//     dateOfJourney: '2025-03-13'
-//   },
-//   headers: {
-//     'x-rapidapi-key': '9f433ad860msh107f7a78693edd4p100c87jsn0cc310348312',
-//     'x-rapidapi-host': 'irctc1.p.rapidapi.com'
-//   }
-// };
+    const options = {
+      method: 'GET',
+      url: 'https://irctc1.p.rapidapi.com/api/v3/trainBetweenStations',
+      params: {
+        fromStationCode: from,
+        toStationCode: to,
+        dateOfJourney: formattedDate
+      },
+      headers: {
+        'x-rapidapi-key': '5bb66f245bmsh348b7a7d395f822p1ce7a2jsnfdeb32f82eb0',
+        'x-rapidapi-host': 'irctc1.p.rapidapi.com'
+      }
+    };
 
-// try {
-// 	const response = await axios.request(options);
-// 	console.log(response.data);
-// } catch (error) {
-// 	console.error(error);
-// }
+    const response = await axios.request(options);
+    console.log('API Response:', response.data);
+    
+    // Map API response to the expected format if needed
+    const apiData = response.data.data || [];
+    
+    // Return the API response
+    res.json({
+      status: true,
+      message: "Success",
+      timestamp: Date.now(),
+      data: apiData
+    });
+  } catch (error) {
+    console.error("Error calling train API:", error);
+    
+    // Fallback to mock data if the API fails
+    console.log("Falling back to mock data");
+    const filteredTrains = trains.filter(
+      (train) =>
+        train.train_date === train_date &&
+        (train.from.toLowerCase() === from.toLowerCase() ||
+          train.from_station_name.toLowerCase() === from.toLowerCase()) &&
+        (train.to.toLowerCase() === to.toLowerCase() ||
+          train.to_station_name.toLowerCase() === to.toLowerCase())
+    );
 
-
-
-  // Check if required query parameters are provided
-  
-  
-  
-  const filteredTrains = trains.filter(
-    (train) =>
-      train.train_date === train_date &&
-      (train.from.toLowerCase() === from.toLowerCase() ||
-        train.from_station_name.toLowerCase() === from.toLowerCase()) &&
-      (train.to.toLowerCase() === to.toLowerCase() ||
-        train.to_station_name.toLowerCase() === to.toLowerCase())
-  );
-
-  // Build the response object
-  const response = {
-    status: true,
-    message: "Success",
-    timestamp: Date.now(),
-    data: filteredTrains,
-  };
-
-  res.json(response);
+    res.json({
+      status: true,
+      message: "Success (using fallback data)",
+      timestamp: Date.now(),
+      data: filteredTrains,
+    });
+  }
 };
 
 module.exports = { findTrains };

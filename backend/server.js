@@ -16,7 +16,12 @@ connectToDB()
 const PORT = process.env.PORT || 5000;
 
 const app = express()
-app.use(cors())
+// Configure CORS with specific options
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:4000', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}))
 app.use(express.json()) // For parsing application/json
 app.use(express.static(path.join(__dirname, 'public')));
 

@@ -2,10 +2,11 @@ import axios from 'axios';
 
 // Create an instance of axios with a base URL
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:4000', // Match the existing URL in the app
+  baseURL: '', // Using relative path since we're using Vite proxy
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Important for CORS with credentials
 });
 
 // Add a request interceptor to add auth token
