@@ -29,6 +29,7 @@ const Suggestions = ({ suggestions, setSuggestions }) => {
               name={buddy.name || buddy.username} 
               profession={buddy.profession}
               isFriend={buddy.isFriend} 
+              travelDetails={buddy.travelDetails}
             />
           ))
         ) : (

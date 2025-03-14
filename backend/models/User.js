@@ -19,6 +19,8 @@ const userSchema = new mongoose.Schema({
     boardingStation: { type: String, default: "" },
     destinationStation: { type: String, default: "" },
     travelDate: { type: Date },
+    trainNumber: { type: String, default: "" },
+    preferredClass: { type: String, default: "" },
     isActive: { type: Boolean, default: false },
   },
   profileCompleted: {

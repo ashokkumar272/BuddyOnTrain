@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axios';
 import { useNavigate } from 'react-router-dom';
 
-const Suggested = ({ id, name, profession, isFriend: initialIsFriend }) => {
+const Suggested = ({ id, name, profession, isFriend: initialIsFriend, travelDetails }) => {
   const [inviting, setInviting] = useState(false);
   const [invited, setInvited] = useState(false);
   const [isFriend, setIsFriend] = useState(initialIsFriend || false);
@@ -211,6 +211,28 @@ const Suggested = ({ id, name, profession, isFriend: initialIsFriend }) => {
       
       {profession && (
         <div className='text-gray-600 text-sm'>{profession}</div>
+      )}
+      
+      {/* Display train details if available */}
+      {travelDetails && (travelDetails.trainNumber || travelDetails.preferredClass) && (
+        <div className='mt-2 p-2 bg-blue-50 rounded-md'>
+          {travelDetails.trainNumber && (
+            <div className='text-sm'>
+              <span className='text-gray-600'>Train No:</span> 
+              <span className='ml-1 text-blue-700 font-medium'>
+                {travelDetails.trainNumber}
+              </span>
+            </div>
+          )}
+          {travelDetails.preferredClass && (
+            <div className='text-sm'>
+              <span className='text-gray-600'>Class:</span> 
+              <span className='ml-1 text-blue-700 font-medium'>
+                {travelDetails.preferredClass}
+              </span>
+            </div>
+          )}
+        </div>
       )}
       
       {error && (

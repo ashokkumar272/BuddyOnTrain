@@ -293,23 +293,37 @@ const UserProfile = () => {
               </div>
             )}
             
-            {user.travelStatus && user.travelStatus.fromStation && (
+            {user.travelStatus && user.travelStatus.boardingStation && user.travelStatus.isActive && (
               <div className="mt-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">Current Travel Status</h3>
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <h4 className="text-gray-500 text-sm mb-1">From Station</h4>
-                      <p className="text-gray-800">{user.travelStatus.fromStation}</p>
+                      <p className="text-gray-800">{user.travelStatus.boardingStation}</p>
                     </div>
                     <div>
                       <h4 className="text-gray-500 text-sm mb-1">To Station</h4>
-                      <p className="text-gray-800">{user.travelStatus.toStation}</p>
+                      <p className="text-gray-800">{user.travelStatus.destinationStation}</p>
                     </div>
                     <div>
                       <h4 className="text-gray-500 text-sm mb-1">Date</h4>
-                      <p className="text-gray-800">{new Date(user.travelStatus.date).toLocaleDateString()}</p>
+                      <p className="text-gray-800">{new Date(user.travelStatus.travelDate).toLocaleDateString()}</p>
                     </div>
+                    {user.travelStatus.trainNumber && (
+                      <div>
+                        <h4 className="text-gray-500 text-sm mb-1">Train</h4>
+                        <p className="text-gray-800">
+                          {user.travelStatus.trainNumber}
+                        </p>
+                      </div>
+                    )}
+                    {user.travelStatus.preferredClass && (
+                      <div>
+                        <h4 className="text-gray-500 text-sm mb-1">Class</h4>
+                        <p className="text-gray-800">{user.travelStatus.preferredClass}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

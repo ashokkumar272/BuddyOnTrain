@@ -262,6 +262,22 @@ const Dashboard = () => {
                   {userData.travelStatus?.destinationStation || 'Not set'}
                 </p>
               </div>
+              {userData.travelStatus?.trainNumber && (
+                <div>
+                  <p className="text-sm text-gray-500">Train</p>
+                  <p className="text-lg text-gray-800">
+                    {userData.travelStatus.trainNumber}
+                  </p>
+                </div>
+              )}
+              {userData.travelStatus?.preferredClass && (
+                <div>
+                  <p className="text-sm text-gray-500">Class</p>
+                  <p className="text-lg text-gray-800">
+                    {userData.travelStatus.preferredClass}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

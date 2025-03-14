@@ -248,7 +248,7 @@ const updateProfile = async (req, res) => {
 // Update travel status
 const updateTravelStatus = async (req, res) => {
   try {
-    const { boardingStation, destinationStation, travelDate, isActive } = req.body;
+    const { boardingStation, destinationStation, travelDate, trainNumber, preferredClass, isActive } = req.body;
 
     console.log('Update Travel Status - Request body:', req.body);
     
@@ -270,6 +270,8 @@ const updateTravelStatus = async (req, res) => {
         boardingStation: "",
         destinationStation: "",
         travelDate: null,
+        trainNumber: "",
+        preferredClass: "",
         isActive: false
       };
       
@@ -310,6 +312,8 @@ const updateTravelStatus = async (req, res) => {
         boardingStation: boardingStation !== undefined ? boardingStation.trim() : user.travelStatus.boardingStation,
         destinationStation: destinationStation !== undefined ? destinationStation.trim() : user.travelStatus.destinationStation,
         travelDate: processedDate !== undefined ? processedDate : user.travelStatus.travelDate,
+        trainNumber: trainNumber !== undefined ? trainNumber : user.travelStatus.trainNumber,
+        preferredClass: preferredClass !== undefined ? preferredClass : user.travelStatus.preferredClass,
         isActive: isActive !== undefined ? isActive : user.travelStatus.isActive
       };
       
@@ -453,7 +457,11 @@ const findTravelBuddies = async (req, res) => {
         name: user.name,
         profession: user.profession,
         bio: user.bio,
-        isFriend // Include friendship status
+        isFriend, // Include friendship status
+        travelDetails: {
+          trainNumber: user.travelStatus.trainNumber,
+          preferredClass: user.travelStatus.preferredClass
+        }
       };
     });
 
