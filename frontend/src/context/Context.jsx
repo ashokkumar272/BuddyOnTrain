@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import axiosInstance from '../utils/axios';
 
 const TrainContext = createContext();
@@ -13,6 +13,28 @@ export const TrainProvider = ({ children }) => {
   const [buddies, setBuddies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [activeView, setActiveView] = useState('trains'); // 'trains' or 'buddies'
+
+  // Toggle between trains and buddies view for mobile
+  const toggleView = (view) => {
+    if (view === 'trains') {
+      setActiveView('trains');
+    } else if (view === 'buddies') {
+      setActiveView('buddies');
+    } else {
+      // Toggle if no specific view provided
+      setActiveView(prev => prev === 'trains' ? 'buddies' : 'trains');
+    }
+  };
+
+  // Automatically switch views when actions are performed
+  useEffect(() => {
+    if (list && !suggestions) {
+      setActiveView('trains');
+    } else if (suggestions) {
+      setActiveView('buddies');
+    }
+  }, [list, suggestions]);
 
   const searchTrains = async () => {
     if (!fromStation || !toStation || !selectedDate) {
@@ -121,7 +143,9 @@ export const TrainProvider = ({ children }) => {
         setBuddies,
         findBuddies,
         loading,
-        error
+        error,
+        activeView,
+        toggleView
       }}
     >
       {children}
