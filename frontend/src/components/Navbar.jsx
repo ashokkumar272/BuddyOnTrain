@@ -8,6 +8,8 @@ const Navbar = () => {
   const [loading, setLoading] = useState(true)
   const [invitations, setInvitations] = useState([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false); // State for mobile menu
+  const [showProfileMenu, setShowProfileMenu] = useState(false); // State for profile menu
   const navigate = useNavigate()
 
   // Fetch current user data from the API
@@ -126,6 +128,16 @@ const Navbar = () => {
     setShowNotifications(prev => !prev)
   }
 
+  // Toggle mobile menu
+  const toggleMenu = () => {
+    setMenuOpen((prev) => !prev);
+  };
+
+  // Toggle profile menu
+  const toggleProfileMenu = () => {
+    setShowProfileMenu((prev) => !prev);
+  };
+
   // Navigate to user's dashboard
   const goToDashboard = () => {
     navigate('/dashboard')
@@ -135,7 +147,26 @@ const Navbar = () => {
     <div className='relative shadow-md bg-white'>
       <div className='flex justify-between items-center py-4 px-6 container mx-auto'>
         <h2 className='text-2xl lg:text-4xl font-bold text-blue-600'>FindBuddy</h2>
-        <div className='flex items-center gap-4'>
+        <button
+          className="lg:hidden text-gray-600 hover:text-blue-600"
+          onClick={toggleMenu}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16m-7 6h7"
+            />
+          </svg>
+        </button>
+        <div className='hidden lg:flex items-center gap-4'>
           <NavLink to="/" className='text-gray-600 hover:text-blue-600 transition-colors'>Home</NavLink>
           
           {loading ? (
@@ -210,22 +241,50 @@ const Navbar = () => {
               </div>
               
               {/* User Menu */}
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={goToDashboard}
-                  className='text-gray-600 hover:text-blue-600 transition-colors'
+              <div className="relative">
+                <button
+                  onClick={toggleProfileMenu}
+                  className="text-gray-600 hover:text-blue-600 focus:outline-none"
                 >
-                  Dashboard
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
                 </button>
-                <button 
-                  onClick={handleLogout} 
-                  className='text-gray-600 hover:text-red-600 transition-colors'
-                >
-                  Logout
-                </button>
-                <span className="text-gray-900 font-medium ml-1">
-                  ({user.username})
-                </span>
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+                    <NavLink
+                      to="/dashboard"
+                      className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+                      onClick={toggleProfileMenu}
+                    >
+                      Dashboard
+                    </NavLink>
+                    <NavLink
+                      to="/chats"
+                      className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+                      onClick={toggleProfileMenu}
+                    >
+                      Chats
+                    </NavLink>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left py-2 px-4 text-gray-600 hover:text-red-600"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -233,6 +292,67 @@ const Navbar = () => {
           )}
         </div>
       </div>
+      {menuOpen && (
+        <div className="lg:hidden bg-gray-100 shadow-md">
+          <NavLink
+            to="/"
+            className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+            onClick={toggleMenu}
+          >
+            Home
+          </NavLink>
+          {loading ? (
+            <span className="block py-2 px-4 text-gray-400">Loading...</span>
+          ) : user ? (
+            <>
+              <button
+                onClick={toggleNotifications}
+                className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+              >
+                Notifications
+              </button>
+              <button
+                onClick={toggleProfileMenu}
+                className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+              >
+                Profile
+              </button>
+              {showProfileMenu && (
+                <div className="bg-gray-100 shadow-md">
+                  <NavLink
+                    to="/dashboard"
+                    className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+                    onClick={toggleProfileMenu}
+                  >
+                    Dashboard
+                  </NavLink>
+                  <NavLink
+                    to="/chats"
+                    className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+                    onClick={toggleProfileMenu}
+                  >
+                    Chats
+                  </NavLink>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left py-2 px-4 text-gray-600 hover:text-red-600"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <NavLink
+              to="/login"
+              className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+              onClick={toggleMenu}
+            >
+              Login
+            </NavLink>
+          )}
+        </div>
+      )}
     </div>
   )
 }
