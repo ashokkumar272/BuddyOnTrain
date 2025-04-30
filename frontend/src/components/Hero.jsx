@@ -27,6 +27,11 @@ const Hero = () => {
     findBuddies();
   };
 
+  const handleSearchTrains = (e) => {
+    e.preventDefault();
+    searchTrains();
+  };
+
   return (
     <div
       className={suggestions ? "flex justify-around" : "flex justify-center"}
@@ -34,10 +39,7 @@ const Hero = () => {
       <div>
         <form
           className="flex gap-4 justify-center items-center p-6 bg-gray-100 rounded-lg shadow-md"
-          onSubmit={(e) => {
-            e.preventDefault();
-            searchTrains();
-          }}
+          onSubmit={handleSearchTrains}
         >
           <input
             onChange={(e) => setFromStation(e.target.value)}
@@ -45,6 +47,7 @@ const Hero = () => {
             value={fromStation}
             type="text"
             placeholder="Boarding Station"
+            disabled={loading}
           />
           <input
             onChange={(e) => setToStation(e.target.value)}
@@ -52,27 +55,30 @@ const Hero = () => {
             value={toStation}
             type="text"
             placeholder="Destination Station"
+            disabled={loading}
           />
           <input
             onChange={(e) => setSelectedDate(e.target.value)}
             className="border border-gray-300 h-14 p-4 rounded-lg focus:outline-none focus:border-blue-500 transition-all w-48"
             value={selectedDate}
             type="date"
+            disabled={loading}
           />
           <button
-            onClick={() => setList((prev) => !prev)}
-            className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-all"
             type="submit"
+            disabled={loading}
+            className={`bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-all ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
           >
-            Search
+            {loading ? "Searching..." : "Search"}
           </button>
           {!suggestions ? (
             <button
               onClick={handleFindBuddy}
               className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-all"
               type="button"
+              disabled={loading}
             >
-              Find Buddy
+              {loading ? "Loading..." : "Find Buddy"}
             </button>
           ) : null}
         </form>
@@ -81,16 +87,27 @@ const Hero = () => {
             {error}
           </div>
         )}
+        
+        {loading && !list && (
+          <div className="flex justify-center items-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          </div>
+        )}
+
         {list && (
-          <div className="px-4">
-            {trains.length > 0 ? (
+          <div className="px-4 mt-4">
+            {loading ? (
+              <div className="flex justify-center items-center p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+              </div>
+            ) : trains.length > 0 ? (
               <ul className="h-[500px] overflow-scroll shadow-y-md">
                 {trains.map((train) => (
                   <TrainCard key={train.train_number} train={train} />
                 ))}
-                </ul>
+              </ul>
             ) : (
-              <p>No trains found.</p>
+              <p className="text-center py-4">No trains found for this route and date.</p>
             )}
           </div>
         )}

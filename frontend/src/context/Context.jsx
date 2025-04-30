@@ -22,7 +22,9 @@ export const TrainProvider = ({ children }) => {
 
     setLoading(true);
     setError(null);
-
+    
+    // Don't reset list state - this ensures results remain visible when searching again
+    
     const formattedDate = selectedDate.split("-").reverse().join("-");
 
     try {
@@ -38,10 +40,13 @@ export const TrainProvider = ({ children }) => {
 
       if (response.data && response.data.data) {
         setTrains(response.data.data);
+        // Always set list to true when we have results
         setList(true);
       } else {
         setError("No trains found for this route");
         setTrains([]);
+        // Keep the list section visible even when no trains found
+        setList(true);
       }
     } catch (error) {
       console.error("Error fetching trains:", error);
@@ -50,6 +55,8 @@ export const TrainProvider = ({ children }) => {
           "Failed to fetch trains. Please try again."
       );
       setTrains([]);
+      // Keep the list section visible even when there's an error
+      setList(true);
     } finally {
       setLoading(false);
     }
@@ -74,13 +81,6 @@ export const TrainProvider = ({ children }) => {
         to: toStation,
         date: formattedDate,
         originalDate: selectedDate,
-      });
-
-      // Log the date objects for debugging
-      console.log("Date objects:", {
-        originalDate: new Date(selectedDate),
-        formattedDate: new Date(formattedDate),
-        formattedDateParts: formattedDate.split("-"),
       });
 
       // Make API request to find travel buddies
