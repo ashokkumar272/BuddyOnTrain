@@ -1,5 +1,4 @@
-const trains = require("../assets/trainData");
-// import axios from 'axios';
+const axios = require('axios');
 
 const findTrains = async (req, res) => {
   const { from, to, train_date } = req.query;
@@ -12,52 +11,77 @@ const findTrains = async (req, res) => {
     });
   }
 
+  try {
+    // Make API call to the train search endpoint
+    const apiUrl = `https://cttrainsapi.confirmtkt.com/api/v1/trains/search?sourceStationCode=${from}&destinationStationCode=${to}&dateOfJourney=${train_date}`;
+    
+    const response = await axios.get(apiUrl);
+    
+    // Extract useful train data from the API response
+    const trainList = response.data?.data?.trainList || [];
+      // Map the API response to a simplified format with only useful data
+    const formattedTrains = trainList.map(train => {
+      // Get the best available class with lowest fare
+      const bestClass = train.avlClassesSorted?.[0];
+      const classInfo = train.availabilityCache?.[bestClass];
+      
+      return {
+        trainNumber: train.trainNumber,
+        trainName: train.trainName,
+        trainType: train.trainType,
+        departureTime: train.departureTime,
+        arrivalTime: train.arrivalTime,
+        duration: train.duration,
+        distance: train.distance,
+        train_date: train_date, // Include the original train_date from request
+        fromStation: {
+          code: train.fromStnCode,
+          name: train.fromStnName,
+          city: train.fromCityName
+        },
+        toStation: {
+          code: train.toStnCode,
+          name: train.toStnName,
+          city: train.toCityName
+        },
+        availableClasses: train.avlClassesSorted || [],
+        hasPantry: train.hasPantry,
+        trainRating: train.trainRating,
+        runningDays: train.runningDays,
+        // Include fare and availability info for the best available class
+        bestClassInfo: classInfo ? {
+          class: bestClass,
+          fare: classInfo.fare,
+          availability: classInfo.availabilityDisplayName,
+          prediction: classInfo.predictionDisplayName,
+          predictionPercentage: classInfo.predictionPercentage
+        } : null
+      };
+    });
 
-// const options = {
-//   method: 'GET',
-//   url: 'https://irctc1.p.rapidapi.com/api/v3/trainBetweenStations',
-//   params: {
-//     fromStationCode: 'BVI',
-//     toStationCode: 'NDLS',
-//     dateOfJourney: '2025-03-13'
-//   },
-//   headers: {
-//     'x-rapidapi-key': '9f433ad860msh107f7a78693edd4p100c87jsn0cc310348312',
-//     'x-rapidapi-host': 'irctc1.p.rapidapi.com'
-//   }
-// };
-
-// try {
-// 	const response = await axios.request(options);
-// 	console.log(response.data);
-// } catch (error) {
-// 	console.error(error);
-// }
-
-
-
-  // Check if required query parameters are provided
+    // Build the response object
+    const responseData = {
+      status: true,
+      message: "Success",
+      timestamp: Date.now(),
+      data: formattedTrains,
+    };    res.json(responseData);
+    
+  } catch (error) {
+    console.error('Error fetching train data:', error.message);
+    console.error('Error details:', error.response?.data || error.message);
+    console.error('API URL used:', `https://cttrainsapi.confirmtkt.com/api/v1/trains/search?sourceStationCode=${from}&destinationStationCode=${to}&dateOfJourney=${train_date}`);
+    
   
-  
-  
-  const filteredTrains = trains.filter(
-    (train) =>
-      train.train_date === train_date &&
-      (train.from.toLowerCase() === from.toLowerCase() ||
-        train.from_station_name.toLowerCase() === from.toLowerCase()) &&
-      (train.to.toLowerCase() === to.toLowerCase() ||
-        train.to_station_name.toLowerCase() === to.toLowerCase())
-  );
 
-  // Build the response object
-  const response = {
-    status: true,
-    message: "Success",
-    timestamp: Date.now(),
-    data: filteredTrains,
-  };
-
-  res.json(response);
+    // Return mock data with a warning message
+    return res.json({
+      status: true,
+      message: "Using sample data - External API temporarily unavailable",
+      timestamp: Date.now(),
+      data: mockTrains,      warning: "This is sample data. External train API is currently unavailable."
+    });
+  }
 };
 
 module.exports = { findTrains };

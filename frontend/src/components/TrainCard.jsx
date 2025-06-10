@@ -27,13 +27,12 @@ const TrainCard = ({ train }) => {
           setUserData(response.data.user);
           
           const travelStatus = response.data.user.travelStatus;
-          
-          // Check if user is listed on this train
+            // Check if user is listed on this train
           if (travelStatus && 
               travelStatus.isActive && 
-              travelStatus.boardingStation === train.from && 
-              travelStatus.destinationStation === train.to && 
-              travelStatus.trainNumber === train.train_number) {
+              travelStatus.boardingStation === train.fromStation?.code && 
+              travelStatus.destinationStation === train.toStation?.code && 
+              travelStatus.trainNumber === train.trainNumber) {
             
             // Compare dates (only compare the date part)
             const trainDate = new Date(train.train_date);
@@ -124,8 +123,7 @@ const TrainCard = ({ train }) => {
           // Clear the unlist success message after 3 seconds
           setTimeout(() => {
             setUnlistSuccess(false);
-          }, 3000);
-        } else {
+          }, 3000);        } else {
           setListingError("Failed to unlist from this train");
         }
       } else {
@@ -133,30 +131,8 @@ const TrainCard = ({ train }) => {
         let trainDate;
         
         try {
-          // Parse the train date string to ensure consistent format
-          // First, handle common formats like "DD-MM-YYYY" or "YYYY-MM-DD"
-          if (typeof train.train_date === 'string') {
-            // Check if it's already a valid date string
-            const directDate = new Date(train.train_date);
-            
-            if (!isNaN(directDate.getTime())) {
-              // Valid date object
-              trainDate = directDate;
-            } else {
-              // Try to parse from DD-MM-YYYY format
-              const dateParts = train.train_date.split('-');
-              if (dateParts.length === 3) {
-                // If in DD-MM-YYYY format, convert to YYYY-MM-DD for proper storing
-                trainDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
-              } else {
-                // Default to current date if parsing fails
-                trainDate = new Date();
-              }
-            }
-          } else {
-            // Default to current date if not a string
-            trainDate = new Date();
-          }
+          // For the new API response, we expect train_date to be in the correct format already
+          trainDate = new Date(train.train_date || new Date().toISOString().split('T')[0]);
           
           console.log('Listing user with date:', {
             original: train.train_date,
@@ -170,10 +146,10 @@ const TrainCard = ({ train }) => {
 
         // Create travel status data to list on train
         const travelStatusData = {
-          boardingStation: train.from,
-          destinationStation: train.to,
+          boardingStation: train.fromStation?.code || train.from,
+          destinationStation: train.toStation?.code || train.to,
           travelDate: trainDate,
-          trainNumber: train.train_number,
+          trainNumber: train.trainNumber || train.train_number,
           preferredClass: selectedClass,
           isActive: true
         };
@@ -206,30 +182,34 @@ const TrainCard = ({ train }) => {
     }
   };
 
-  return (
-    <li
-      key={train.train_number}
+  return (    <li
+      key={train.trainNumber || train.train_number}
       className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-800 mb-1">
-            {train.train_name}
+            {train.trainName || train.train_name}
             <span className="text-blue-600 font-medium">
-              ({train.train_number})
+              ({train.trainNumber || train.train_number})
             </span>
           </h3>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
-              {train.duration}
+              {train.duration ? `${Math.floor(train.duration / 60)}h ${train.duration % 60}m` : 'N/A'}
             </span>
             <span>{train.train_date}</span>
+            {train.trainType && (
+              <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                {train.trainType}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-end space-y-1">
-          <span className="text-sm font-medium text-gray-700">Class</span>
+          <span className="text-sm font-medium text-gray-700">Available Classes</span>
           <div className="flex space-x-1">
-            {train.class_type?.map((cls) => (
+            {(train.availableClasses || train.class_type || []).map((cls) => (
               <span
                 key={cls}
                 className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
@@ -238,41 +218,52 @@ const TrainCard = ({ train }) => {
               </span>
             ))}
           </div>
+          {train.bestClassInfo && (
+            <div className="text-xs text-gray-500 mt-1">
+              <div>Fare: ₹{train.bestClassInfo.fare}</div>
+              <div>{train.bestClassInfo.availability}</div>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="flex justify-between">
         <div className="space-y-2">
           <p className="font-medium text-gray-900">
-            {train.from_station_name} ({train.from})
+            {train.fromStation?.name || train.from_station_name} ({train.fromStation?.code || train.from})
           </p>
           <div className="text-sm text-gray-600">
-            <p>Scheduled Departure: {train.from_std}</p>
-            <p>Actual Departure: {train.from_sta}</p>
+            <p>Departure: {train.departureTime || train.from_std}</p>
+            {train.fromStation?.city && (
+              <p className="text-xs text-gray-500">{train.fromStation.city}</p>
+            )}
           </div>
         </div>
 
         <div className="text-center">
           <div className="w-8 h-px bg-gray-300 mt-3"></div>
+          {train.distance && (
+            <div className="text-xs text-gray-500 mt-1">{train.distance} km</div>
+          )}
         </div>
 
         <div className="space-y-2 text-right">
           <p className="font-medium text-gray-900">
-            {train.to_station_name} ({train.to})
+            {train.toStation?.name || train.to_station_name} ({train.toStation?.code || train.to})
           </p>
           <div className="text-sm text-gray-600">
-            <p>Scheduled Arrival: {train.to_sta}</p>
-            <p>Actual Arrival: {train.to_std}</p>
+            <p>Arrival: {train.arrivalTime || train.to_sta}</p>
+            {train.toStation?.city && (
+              <p className="text-xs text-gray-500">{train.toStation.city}</p>
+            )}
           </div>
         </div>
-      </div>
-
-      {/* Class Selection UI */}
+      </div>      {/* Class Selection UI */}
       {showClassSelection && !isListed && (
         <div className="mt-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">Select your preferred class:</h4>
           <div className="flex flex-wrap gap-2 justify-center mb-4">
-            {train.class_type?.map((cls) => (
+            {(train.availableClasses || train.class_type || []).map((cls) => (
               <button
                 key={cls}
                 className={`px-4 py-2 rounded text-sm ${
