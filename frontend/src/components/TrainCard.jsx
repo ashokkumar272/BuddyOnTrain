@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import axiosInstance from "../utils/axios";
+import ClassInfo from "./ClassInfo";
 
 const TrainCard = ({ train }) => {
   const [isListing, setIsListing] = useState(false);
@@ -234,96 +235,11 @@ const TrainCard = ({ train }) => {
           </div>
         </div>
       </div>      {/* Available Classes Section */}
-      <div className="mt-4 border-t border-gray-100 pt-4">
-        <span className="text-sm font-medium text-gray-700 block mb-3">Available Classes</span>
-        {train.classesInfo && train.classesInfo.length > 0 ? (
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {train.classesInfo.map((classInfo) => (
-              <button
-                key={classInfo.class}
-                onClick={() => handleClassSelect(classInfo.class)}
-                className={`bg-gray-50 border rounded-lg p-2 text-xs min-w-[100px] flex-shrink-0 transition-all hover:shadow-md ${
-                  selectedClass === classInfo.class
-                    ? "border-blue-500 bg-blue-50 shadow-md"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                <div className="flex justify-between items-center mb-1">
-                  <span className={`font-semibold px-2 py-1 rounded text-xs ${
-                    selectedClass === classInfo.class
-                      ? "text-blue-800 bg-blue-200"
-                      : "text-gray-800 bg-blue-100"
-                  }`}>
-                    {classInfo.class}
-                  </span>
-                  <span className="font-bold text-green-600 text-xs">
-                    ₹{classInfo.fare}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 text-xs">Avail:</span>
-                    <span className={`font-medium text-xs ${
-                      classInfo.availability?.toLowerCase().includes('available') 
-                        ? 'text-green-600' 
-                        : classInfo.availability?.toLowerCase().includes('waiting')
-                        ? 'text-orange-600'
-                        : 'text-red-600'
-                    }`}>
-                      {classInfo.availability || 'N/A'}
-                    </span>
-                  </div>
-                  {classInfo.prediction && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 text-xs">Pred:</span>
-                      <span className="font-medium text-blue-600 text-xs">
-                        {classInfo.prediction}
-                        {classInfo.predictionPercentage && 
-                          ` (${classInfo.predictionPercentage}%)`
-                        }
-                      </span>
-                    </div>
-                  )}
-                </div>
-                {selectedClass === classInfo.class && (
-                  <div className="text-xs text-blue-600 mt-2 font-medium text-center">
-                    ✓ Selected
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        ) : (
-          // Fallback to old display if classesInfo is not available
-          <div className="text-center">
-            <div className="flex justify-center space-x-2 mb-2">
-              {(train.availableClasses || train.class_type || []).map((cls) => (
-                <button
-                  key={cls}
-                  onClick={() => handleClassSelect(cls)}
-                  className={`px-2 py-1 rounded text-xs transition-all ${
-                    selectedClass === cls
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {cls}
-                </button>
-              ))}
-            </div>
-            {train.bestClassInfo && (
-              <div className="text-xs text-gray-500">
-                <div>Fare: ₹{train.bestClassInfo.fare}</div>
-                <div>{train.bestClassInfo.availability}</div>
-              </div>
-            )}
-          </div>
-        )}        {selectedClass && (
-          <div className="text-center text-sm text-gray-600 mt-3">
-            Selected class: <span className="font-semibold text-blue-600">{selectedClass}</span>
-          </div>
-        )}
-      </div>
+      <ClassInfo 
+        train={train}
+        selectedClass={selectedClass}
+        onClassSelect={handleClassSelect}
+      />
 
       {/* List/Unlist Button and Status */}
       <div className="mt-4 flex justify-center">
