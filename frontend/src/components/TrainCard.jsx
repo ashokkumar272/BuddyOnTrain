@@ -9,38 +9,33 @@ const TrainCard = ({ train }) => {
   const [listingSuccess, setListingSuccess] = useState(false);
   const [isListed, setIsListed] = useState(false);
   const [userData, setUserData] = useState(null);
-  const [unlistSuccess, setUnlistSuccess] = useState(false);  const [selectedClass, setSelectedClass] = useState("");
+  const [unlistSuccess, setUnlistSuccess] = useState(false);
+  const [selectedClass, setSelectedClass] = useState("");
 
-  // Check if user is already listed on this train
   useEffect(() => {
     const checkUserListing = async () => {
       try {
-        // Check if user is logged in
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        // Get user data to check current travel status
         const response = await axiosInstance.get('/api/users/me');
         
         if (response.data.success) {
           setUserData(response.data.user);
           
           const travelStatus = response.data.user.travelStatus;
-            // Check if user is listed on this train
           if (travelStatus && 
               travelStatus.isActive && 
               travelStatus.boardingStation === train.fromStation?.code && 
               travelStatus.destinationStation === train.toStation?.code && 
               travelStatus.trainNumber === train.trainNumber) {
             
-            // Compare dates (only compare the date part)
             const trainDate = new Date(train.train_date);
             const userDate = new Date(travelStatus.travelDate);
             
             if (trainDate.toDateString() === userDate.toDateString()) {
               setIsListed(true);
               setListingSuccess(true);
-              // Set the selected class from user data
               if (travelStatus.preferredClass) {
                 setSelectedClass(travelStatus.preferredClass);
               }
@@ -58,30 +53,18 @@ const TrainCard = ({ train }) => {
   const handleClassSelect = (classType) => {
     setSelectedClass(classType);
   };
-  const handleStartListing = () => {
-    // No longer needed - user selects class directly from displayed classes
-    // Just proceed with listing if class is selected
-    if (!selectedClass) {
-      setListingError("Please select a travel class first");
-      return;
-    }
-    handleListYourself();
-  };
 
   const handleListYourself = async () => {
-    // For unlisting, proceed directly
     if (isListed) {
       await performListingAction();
       return;
     }
     
-    // For listing, validate class selection first
     if (!selectedClass) {
       setListingError("Please select a travel class before listing yourself");
       return;
     }
     
-    // Proceed with listing action
     await performListingAction();
   };
   
@@ -91,18 +74,14 @@ const TrainCard = ({ train }) => {
     setUnlistSuccess(false);
     
     try {
-      // Get token from localStorage
       const token = localStorage.getItem('token');
-      
       if (!token) {
         setListingError("Please login to list yourself on this train");
         setIsListing(false);
         return;
       }
 
-      // If already listed, unlist
       if (isListed) {
-        // Create travel status data with all fields blank/empty
         const travelStatusData = {
           boardingStation: "",
           destinationStation: "",
@@ -112,39 +91,29 @@ const TrainCard = ({ train }) => {
           isActive: false
         };
 
-        // Make API request to update travel status (unlist)
         const response = await axiosInstance.put(
           '/api/users/travel-status',
           travelStatusData
-        );        if (response.data.success) {
+        );
+        if (response.data.success) {
           setIsListed(false);
           setListingSuccess(false);
           setUnlistSuccess(true);
-          // Clear the unlist success message after 3 seconds
           setTimeout(() => {
             setUnlistSuccess(false);
-          }, 3000);} else {
+          }, 3000);
+        } else {
           setListingError("Failed to unlist from this train");
         }
       } else {
-        // Format the train date correctly - to ensure it matches the format expected when searching
         let trainDate;
-        
         try {
-          // For the new API response, we expect train_date to be in the correct format already
           trainDate = new Date(train.train_date || new Date().toISOString().split('T')[0]);
-          
-          console.log('Listing user with date:', {
-            original: train.train_date,
-            parsed: trainDate,
-            isoString: trainDate.toISOString()
-          });
         } catch (error) {
           console.error('Error parsing train date:', error);
-          trainDate = new Date(); // Default to current date on error
+          trainDate = new Date();
         }
 
-        // Create travel status data to list on train
         const travelStatusData = {
           boardingStation: train.fromStation?.code || train.from,
           destinationStation: train.toStation?.code || train.to,
@@ -154,16 +123,13 @@ const TrainCard = ({ train }) => {
           isActive: true
         };
 
-        console.log('Updating travel status with:', travelStatusData);
-
-        // Make API request to update travel status (list)
         const response = await axiosInstance.put(
           '/api/users/travel-status',
           travelStatusData
-        );        if (response.data.success) {
+        );
+        if (response.data.success) {
           setIsListed(true);
           setListingSuccess(true);
-          console.log('Successfully listed on train:', response.data);
         } else {
           setListingError("Failed to list yourself on this train");
         }
@@ -179,103 +145,122 @@ const TrainCard = ({ train }) => {
     }
   };
 
-  return (    <li
+  return (
+    <li
       key={train.trainNumber || train.train_number}
-      className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+      className="bg-white p-6 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all mb-6 relative"
     >
+      {/* Ribbon for listed status */}
+      {isListed && listingSuccess && (
+        <div className="absolute top-0 right-0 bg-green-500 text-white px-4 py-1 rounded-bl-lg rounded-tr-lg font-medium text-sm z-10">
+          You're Listed
+        </div>
+      )}
+      
       <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">
-            {train.trainName || train.train_name}
-            <span className="text-blue-600 font-medium">
+        <div className="flex justify-between">
+          <h3 className="text-xl font-bold text-gray-800 mb-1 flex items-center">
+            <span className="mr-2">{train.trainName || train.train_name}</span>
+            <span className="text-blue-600 font-medium text-base">
               ({train.trainNumber || train.train_number})
             </span>
           </h3>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
-              {train.duration ? `${Math.floor(train.duration / 60)}h ${train.duration % 60}m` : 'N/A'}
+            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+              {train.train_date}
             </span>
-            <span>{train.train_date}</span>
             {train.trainType && (
               <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">
                 {train.trainType}
               </span>
             )}
-          </div>        </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-between">
-        <div className="space-y-2">
-          <p className="font-medium text-gray-900">
-            {train.fromStation?.name || train.from_station_name} ({train.fromStation?.code || train.from})
+      <div className="flex justify-between items-center mb-4">
+        <div className="space-y-1">
+          <p className="font-bold text-gray-900 text-lg">
+            {train.fromStation?.name || train.from_station_name} 
+            <span className="text-gray-600 ml-1">({train.fromStation?.code || train.from})</span>
           </p>
           <div className="text-sm text-gray-600">
-            <p>Departure: {train.departureTime || train.from_std}</p>
+            <p className="font-medium">Departure: {train.departureTime || train.from_std}</p>
             {train.fromStation?.city && (
               <p className="text-xs text-gray-500">{train.fromStation.city}</p>
             )}
           </div>
         </div>
 
-        <div className="text-center">
-          <div className="w-8 h-px bg-gray-300 mt-3"></div>
+        <div className="flex flex-col items-center">
+          <div className="text-xs text-gray-500 mt-1 bg-gray-100 px-2 py-0.5 rounded">
+              {train.duration ? `${Math.floor(train.duration / 60)}h ${train.duration % 60}m` : 'N/A'}
+            </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+            <div className="w-24 h-0.5 bg-blue-300"></div>
+            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+          </div>
           {train.distance && (
-            <div className="text-xs text-gray-500 mt-1">{train.distance} km</div>
+            <div className="text-xs text-gray-500 mt-1 bg-gray-100 px-2 py-0.5 rounded">
+              {train.distance} km
+            </div>
           )}
         </div>
 
-        <div className="space-y-2 text-right">
-          <p className="font-medium text-gray-900">
-            {train.toStation?.name || train.to_station_name} ({train.toStation?.code || train.to})
-          </p>          <div className="text-sm text-gray-600">
-            <p>Arrival: {train.arrivalTime || train.to_sta}</p>
+        <div className="space-y-1 text-right">
+          <p className="font-bold text-gray-900 text-lg">
+            {train.toStation?.name || train.to_station_name} 
+            <span className="text-gray-600 ml-1">({train.toStation?.code || train.to})</span>
+          </p>
+          <div className="text-sm text-gray-600">
+            <p className="font-medium">Arrival: {train.arrivalTime || train.to_sta}</p>
             {train.toStation?.city && (
               <p className="text-xs text-gray-500">{train.toStation.city}</p>
             )}
           </div>
         </div>
-      </div>      {/* Available Classes Section */}
-      <ClassInfo 
-        train={train}
-        selectedClass={selectedClass}
-        onClassSelect={handleClassSelect}
-      />
+      </div>
 
-      {/* List/Unlist Button and Status */}
-      <div className="mt-4 flex justify-center">
+      <div className="border-t border-gray-200">
+        <ClassInfo 
+          train={train}
+          selectedClass={selectedClass}
+          onClassSelect={handleClassSelect}
+        />
+      </div>      <div className="mt-3 pt-3 flex justify-center">
         {isListed && listingSuccess ? (
-          <div className="flex flex-col items-center">
-            <div className="text-green-600 font-medium mb-2">
-              You are listed on this train in <span className="font-bold">{selectedClass}</span> class! Fellow travelers can find you.
+          <div className="flex flex-col items-center w-full">
+            <div className="text-green-600 font-medium mb-3 text-center">
+              You are listed on this train in 
+              <span className="font-bold text-green-700"> {selectedClass} </span> 
+              class! Fellow travelers can find you.
             </div>
             <button
               onClick={handleListYourself}
               disabled={isListing}
-              className="bg-red-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-red-700 transition-all disabled:bg-red-300"
+              className="bg-red-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-red-700 transition-all disabled:bg-red-300 w-full max-w-xs"
             >
               {isListing ? "Processing..." : "Unlist Yourself"}
             </button>
           </div>
         ) : unlistSuccess ? (
-          <div className="text-blue-600 font-medium">
+          <div className="text-blue-600 font-medium py-3 px-4 bg-blue-50 rounded-lg border border-blue-200">
             You have been unlisted from this train successfully!
           </div>
-        ) : (
+        ) : selectedClass ? (
           <button
-            onClick={handleStartListing}
+            onClick={handleListYourself}
             disabled={isListing}
-            className={`text-white font-semibold px-8 py-3 rounded-lg transition-all ${
-              selectedClass ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-300 cursor-not-allowed"
-            }`}
+            className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800 shadow-md font-semibold px-8 py-3 rounded-lg transition-all w-full max-w-xs"
           >
-            {isListing ? "Processing..." : selectedClass ? "List Yourself" : "Select a Class First"}
+            {isListing ? "Processing..." : "List Yourself on This Train"}
           </button>
-        )}
+        ) : null}
       </div>
       
-      {/* Error message */}
       {listingError && (
-        <div className="mt-2 text-red-600 text-center">
+        <div className="mt-3 text-red-600 text-center bg-red-50 py-2 px-4 rounded-lg border border-red-200">
           {listingError}
         </div>
       )}

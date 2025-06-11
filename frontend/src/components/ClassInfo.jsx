@@ -10,11 +10,11 @@ const ClassInfo = ({
   };
 
   return (
-    <div className="mt-4 border-t border-gray-100 pt-4">
+    <div className="mt-2 border-t border-gray-100">
       <span className="text-sm font-medium text-gray-700 block mb-3">Available Classes</span>
       
       {train.classesInfo && train.classesInfo.length > 0 ? (
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        <div className="flex gap-4 overflow-x-auto">
           {train.classesInfo.map((classInfo) => (
             <ClassCard
               key={classInfo.class}
@@ -31,12 +31,6 @@ const ClassInfo = ({
           onClassSelect={handleClassSelect}
         />
       )}
-
-      {selectedClass && (
-        <div className="text-center text-sm text-gray-600 mt-3">
-          Selected class: <span className="font-semibold text-blue-600">{selectedClass}</span>
-        </div>
-      )}
     </div>
   );
 };
@@ -46,32 +40,32 @@ const ClassCard = ({ classInfo, isSelected, onSelect }) => {
   return (
     <button
       onClick={onSelect}
-      className={`border rounded-lg p-3 min-w-[110px] flex-shrink-0 transition-all ${
+      className={`border rounded-lg p-3 min-w-[160px] flex-shrink-0 transition-all ${
         isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-300 hover:border-blue-300 bg-white"
       }`}
     >
-      <div className="flex flex-col items-center">
-        {/* Class Badge */}
-        <span className={`font-bold text-sm px-3 py-1 rounded-full mb-2 ${
-          isSelected
-            ? "bg-blue-600 text-white"
-            : "bg-gray-200 text-gray-800"
-        }`}>
-          {classInfo.class}
-        </span>
-          {/* Fare */}
-        {classInfo.fare && (
-          <div className="text-center mb-2">
+      <div className="flex flex-col space-y-2">
+        {/* Top row: Class Badge and Fare */}
+        <div className="flex items-center justify-between">
+          <span className={`font-bold text-sm px-2 py-1 rounded-full ${
+            isSelected
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-800"
+          }`}>
+            {classInfo.class}
+          </span>
+          {classInfo.fare && (
             <div className="text-green-700 font-bold text-sm">
               ₹{classInfo.fare}
             </div>
-          </div>
-        )}
-          {/* Availability */}
-        <div className="text-center">
-          <div className={`font-bold text-sm ${
+          )}
+        </div>
+          
+        {/* Bottom row: Availability and Prediction */}
+        <div className="flex items-center justify-between text-xs">
+          <div className={`font-bold ${
             classInfo.availability && classInfo.availability.includes('WL')
               ? 'text-red-600'
               : classInfo.availability && classInfo.availability.includes('AVL')
@@ -80,16 +74,13 @@ const ClassCard = ({ classInfo, isSelected, onSelect }) => {
           }`}>
             {classInfo.availability || 'N/A'}
           </div>
-        </div>
-        
-        {/* Prediction */}
-        {classInfo.prediction && (
-          <div className="text-center mt-2">
-            <div className="text-blue-600 font-semibold text-sm">
-              {classInfo.predictionPercentage ? `${classInfo.predictionPercentage}%` : classInfo.prediction} Chance
+          
+          {classInfo.prediction && (
+            <div className="text-blue-600 font-semibold">
+              {classInfo.predictionPercentage ? `${classInfo.predictionPercentage}%` : classInfo.prediction}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </button>
   );
