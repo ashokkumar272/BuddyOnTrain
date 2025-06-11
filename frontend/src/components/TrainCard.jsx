@@ -22,17 +22,29 @@ const TrainCard = ({ train }) => {
         
         if (response.data.success) {
           setUserData(response.data.user);
-          
-          const travelStatus = response.data.user.travelStatus;
+            const travelStatus = response.data.user.travelStatus;
           if (travelStatus && 
               travelStatus.isActive && 
               travelStatus.boardingStation === train.fromStation?.code && 
               travelStatus.destinationStation === train.toStation?.code && 
               travelStatus.trainNumber === train.trainNumber) {
             
-            const trainDate = new Date(train.train_date);
+            // Parse train date from DD-MM-YYYY format
+            let trainDate;
+            if (train.train_date) {
+              const dateParts = train.train_date.split('-');
+              if (dateParts.length === 3) {
+                trainDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+              } else {
+                trainDate = new Date(train.train_date);
+              }
+            } else {
+              trainDate = new Date();
+            }
+            
             const userDate = new Date(travelStatus.travelDate);
             
+            // Compare dates by converting both to date strings (YYYY-MM-DD)
             if (trainDate.toDateString() === userDate.toDateString()) {
               setIsListed(true);
               setListingSuccess(true);
@@ -104,11 +116,22 @@ const TrainCard = ({ train }) => {
           }, 3000);
         } else {
           setListingError("Failed to unlist from this train");
-        }
-      } else {
+        }      } else {
         let trainDate;
         try {
-          trainDate = new Date(train.train_date || new Date().toISOString().split('T')[0]);
+          // Parse the train_date which comes in DD-MM-YYYY format
+          if (train.train_date) {
+            // If it's in DD-MM-YYYY format, convert to ISO string
+            const dateParts = train.train_date.split('-');
+            if (dateParts.length === 3) {
+              // Create date from DD-MM-YYYY -> YYYY-MM-DD
+              trainDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+            } else {
+              trainDate = new Date(train.train_date);
+            }
+          } else {
+            trainDate = new Date();
+          }
         } catch (error) {
           console.error('Error parsing train date:', error);
           trainDate = new Date();
@@ -117,7 +140,7 @@ const TrainCard = ({ train }) => {
         const travelStatusData = {
           boardingStation: train.fromStation?.code || train.from,
           destinationStation: train.toStation?.code || train.to,
-          travelDate: trainDate,
+          travelDate: trainDate.toISOString(), // Convert to ISO string for proper backend handling
           trainNumber: train.trainNumber || train.train_number,
           preferredClass: selectedClass,
           isActive: true

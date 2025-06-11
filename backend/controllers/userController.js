@@ -276,28 +276,33 @@ const updateTravelStatus = async (req, res) => {
       };
       
       console.log('Update Travel Status - Resetting travel status to empty');
-    } else {
-      // Process the date to ensure it's stored consistently
+    } else {      // Process the date to ensure it's stored consistently
       let processedDate = travelDate;
       
       if (travelDate) {
         try {
           // If it's a string date, convert to proper Date object
           if (typeof travelDate === 'string') {
-            processedDate = new Date(travelDate);
-            
-            // If invalid date, try parsing from DD-MM-YYYY format
-            if (isNaN(processedDate.getTime())) {
-              const dateParts = travelDate.split('-');
-              if (dateParts.length === 3) {
-                processedDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+            // Handle ISO format dates (YYYY-MM-DDTHH:mm:ss.sssZ)
+            if (travelDate.includes('T') || travelDate.includes('Z')) {
+              processedDate = new Date(travelDate);
+            } else {
+              processedDate = new Date(travelDate);
+              
+              // If invalid date, try parsing from DD-MM-YYYY format
+              if (isNaN(processedDate.getTime())) {
+                const dateParts = travelDate.split('-');
+                if (dateParts.length === 3) {
+                  processedDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+                }
               }
             }
             
             console.log('Update Travel Status - Processed date:', {
               original: travelDate,
               processed: processedDate,
-              iso: processedDate.toISOString()
+              iso: processedDate.toISOString(),
+              isValid: !isNaN(processedDate.getTime())
             });
           }
         } catch (error) {
