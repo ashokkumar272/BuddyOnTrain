@@ -16,14 +16,33 @@ const findTrains = async (req, res) => {
     const apiUrl = `https://cttrainsapi.confirmtkt.com/api/v1/trains/search?sourceStationCode=${from}&destinationStationCode=${to}&dateOfJourney=${train_date}`;
     
     const response = await axios.get(apiUrl);
-    
-    // Extract useful train data from the API response
+      // Extract useful train data from the API response
     const trainList = response.data?.data?.trainList || [];
-      // Map the API response to a simplified format with only useful data
+    
+    // Map the API response to a simplified format with only useful data
     const formattedTrains = trainList.map(train => {
       // Get the best available class with lowest fare
       const bestClass = train.avlClassesSorted?.[0];
-      const classInfo = train.availabilityCache?.[bestClass];
+      const bestClassInfo = train.availabilityCache?.[bestClass];
+      
+      // Get availability and prediction info for all classes
+      const classesInfo = [];
+      if (train.avlClassesSorted && train.availabilityCache) {
+        train.avlClassesSorted.forEach(classCode => {
+          const classData = train.availabilityCache[classCode];
+          if (classData) {
+            classesInfo.push({
+              class: classCode,
+              fare: classData.fare,
+              availability: classData.availabilityDisplayName,
+              prediction: classData.predictionDisplayName,
+              predictionPercentage: classData.predictionPercentage,
+              availabilityCount: classData.availabilityCount,
+              predictionCount: classData.predictionCount
+            });
+          }
+        });
+      }
       
       return {
         trainNumber: train.trainNumber,
@@ -48,15 +67,16 @@ const findTrains = async (req, res) => {
         hasPantry: train.hasPantry,
         trainRating: train.trainRating,
         runningDays: train.runningDays,
-        // Include fare and availability info for the best available class
-        bestClassInfo: classInfo ? {
+        // Include fare and availability info for all available classes
+        classesInfo: classesInfo,
+        // Keep the best class info for backward compatibility
+        bestClassInfo: bestClassInfo ? {
           class: bestClass,
-          fare: classInfo.fare,
-          availability: classInfo.availabilityDisplayName,
-          prediction: classInfo.predictionDisplayName,
-          predictionPercentage: classInfo.predictionPercentage
-        } : null
-      };
+          fare: bestClassInfo.fare,
+          availability: bestClassInfo.availabilityDisplayName,
+          prediction: bestClassInfo.predictionDisplayName,
+          predictionPercentage: bestClassInfo.predictionPercentage
+        } : null      };
     });
 
     // Build the response object
@@ -65,21 +85,19 @@ const findTrains = async (req, res) => {
       message: "Success",
       timestamp: Date.now(),
       data: formattedTrains,
-    };    res.json(responseData);
+    };
     
+    res.json(responseData);
   } catch (error) {
     console.error('Error fetching train data:', error.message);
     console.error('Error details:', error.response?.data || error.message);
     console.error('API URL used:', `https://cttrainsapi.confirmtkt.com/api/v1/trains/search?sourceStationCode=${from}&destinationStationCode=${to}&dateOfJourney=${train_date}`);
     
-  
-
-    // Return mock data with a warning message
-    return res.json({
-      status: true,
-      message: "Using sample data - External API temporarily unavailable",
-      timestamp: Date.now(),
-      data: mockTrains,      warning: "This is sample data. External train API is currently unavailable."
+    // Return error response when API fails
+    return res.status(500).json({
+      status: false,
+      message: "Unable to fetch train data. Please try again later.",
+      error: error.message
     });
   }
 };

@@ -8,9 +8,7 @@ const TrainCard = ({ train }) => {
   const [listingSuccess, setListingSuccess] = useState(false);
   const [isListed, setIsListed] = useState(false);
   const [userData, setUserData] = useState(null);
-  const [unlistSuccess, setUnlistSuccess] = useState(false);
-  const [selectedClass, setSelectedClass] = useState("");
-  const [showClassSelection, setShowClassSelection] = useState(false);
+  const [unlistSuccess, setUnlistSuccess] = useState(false);  const [selectedClass, setSelectedClass] = useState("");
 
   // Check if user is already listed on this train
   useEffect(() => {
@@ -59,10 +57,14 @@ const TrainCard = ({ train }) => {
   const handleClassSelect = (classType) => {
     setSelectedClass(classType);
   };
-
   const handleStartListing = () => {
-    // Show class selection before proceeding with listing
-    setShowClassSelection(true);
+    // No longer needed - user selects class directly from displayed classes
+    // Just proceed with listing if class is selected
+    if (!selectedClass) {
+      setListingError("Please select a travel class first");
+      return;
+    }
+    handleListYourself();
   };
 
   const handleListYourself = async () => {
@@ -113,17 +115,14 @@ const TrainCard = ({ train }) => {
         const response = await axiosInstance.put(
           '/api/users/travel-status',
           travelStatusData
-        );
-
-        if (response.data.success) {
+        );        if (response.data.success) {
           setIsListed(false);
           setListingSuccess(false);
           setUnlistSuccess(true);
-          setShowClassSelection(false);
           // Clear the unlist success message after 3 seconds
           setTimeout(() => {
             setUnlistSuccess(false);
-          }, 3000);        } else {
+          }, 3000);} else {
           setListingError("Failed to unlist from this train");
         }
       } else {
@@ -160,12 +159,9 @@ const TrainCard = ({ train }) => {
         const response = await axiosInstance.put(
           '/api/users/travel-status',
           travelStatusData
-        );
-
-        if (response.data.success) {
+        );        if (response.data.success) {
           setIsListed(true);
           setListingSuccess(true);
-          setShowClassSelection(false);
           console.log('Successfully listed on train:', response.data);
         } else {
           setListingError("Failed to list yourself on this train");
@@ -204,27 +200,7 @@ const TrainCard = ({ train }) => {
                 {train.trainType}
               </span>
             )}
-          </div>
-        </div>
-        <div className="flex flex-col items-end space-y-1">
-          <span className="text-sm font-medium text-gray-700">Available Classes</span>
-          <div className="flex space-x-1">
-            {(train.availableClasses || train.class_type || []).map((cls) => (
-              <span
-                key={cls}
-                className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
-              >
-                {cls}
-              </span>
-            ))}
-          </div>
-          {train.bestClassInfo && (
-            <div className="text-xs text-gray-500 mt-1">
-              <div>Fare: ₹{train.bestClassInfo.fare}</div>
-              <div>{train.bestClassInfo.availability}</div>
-            </div>
-          )}
-        </div>
+          </div>        </div>
       </div>
 
       <div className="flex justify-between">
@@ -250,40 +226,104 @@ const TrainCard = ({ train }) => {
         <div className="space-y-2 text-right">
           <p className="font-medium text-gray-900">
             {train.toStation?.name || train.to_station_name} ({train.toStation?.code || train.to})
-          </p>
-          <div className="text-sm text-gray-600">
+          </p>          <div className="text-sm text-gray-600">
             <p>Arrival: {train.arrivalTime || train.to_sta}</p>
             {train.toStation?.city && (
               <p className="text-xs text-gray-500">{train.toStation.city}</p>
             )}
           </div>
         </div>
-      </div>      {/* Class Selection UI */}
-      {showClassSelection && !isListed && (
-        <div className="mt-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Select your preferred class:</h4>
-          <div className="flex flex-wrap gap-2 justify-center mb-4">
-            {(train.availableClasses || train.class_type || []).map((cls) => (
+      </div>      {/* Available Classes Section */}
+      <div className="mt-4 border-t border-gray-100 pt-4">
+        <span className="text-sm font-medium text-gray-700 block mb-3">Available Classes</span>
+        {train.classesInfo && train.classesInfo.length > 0 ? (
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {train.classesInfo.map((classInfo) => (
               <button
-                key={cls}
-                className={`px-4 py-2 rounded text-sm ${
-                  selectedClass === cls
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                key={classInfo.class}
+                onClick={() => handleClassSelect(classInfo.class)}
+                className={`bg-gray-50 border rounded-lg p-2 text-xs min-w-[100px] flex-shrink-0 transition-all hover:shadow-md ${
+                  selectedClass === classInfo.class
+                    ? "border-blue-500 bg-blue-50 shadow-md"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
-                onClick={() => handleClassSelect(cls)}
               >
-                {cls}
+                <div className="flex justify-between items-center mb-1">
+                  <span className={`font-semibold px-2 py-1 rounded text-xs ${
+                    selectedClass === classInfo.class
+                      ? "text-blue-800 bg-blue-200"
+                      : "text-gray-800 bg-blue-100"
+                  }`}>
+                    {classInfo.class}
+                  </span>
+                  <span className="font-bold text-green-600 text-xs">
+                    ₹{classInfo.fare}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 text-xs">Avail:</span>
+                    <span className={`font-medium text-xs ${
+                      classInfo.availability?.toLowerCase().includes('available') 
+                        ? 'text-green-600' 
+                        : classInfo.availability?.toLowerCase().includes('waiting')
+                        ? 'text-orange-600'
+                        : 'text-red-600'
+                    }`}>
+                      {classInfo.availability || 'N/A'}
+                    </span>
+                  </div>
+                  {classInfo.prediction && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-xs">Pred:</span>
+                      <span className="font-medium text-blue-600 text-xs">
+                        {classInfo.prediction}
+                        {classInfo.predictionPercentage && 
+                          ` (${classInfo.predictionPercentage}%)`
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {selectedClass === classInfo.class && (
+                  <div className="text-xs text-blue-600 mt-2 font-medium text-center">
+                    ✓ Selected
+                  </div>
+                )}
               </button>
             ))}
           </div>
-          {selectedClass && (
-            <div className="text-center text-sm text-gray-600 mb-3">
-              Selected class: <span className="font-semibold">{selectedClass}</span>
+        ) : (
+          // Fallback to old display if classesInfo is not available
+          <div className="text-center">
+            <div className="flex justify-center space-x-2 mb-2">
+              {(train.availableClasses || train.class_type || []).map((cls) => (
+                <button
+                  key={cls}
+                  onClick={() => handleClassSelect(cls)}
+                  className={`px-2 py-1 rounded text-xs transition-all ${
+                    selectedClass === cls
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {cls}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-      )}
+            {train.bestClassInfo && (
+              <div className="text-xs text-gray-500">
+                <div>Fare: ₹{train.bestClassInfo.fare}</div>
+                <div>{train.bestClassInfo.availability}</div>
+              </div>
+            )}
+          </div>
+        )}        {selectedClass && (
+          <div className="text-center text-sm text-gray-600 mt-3">
+            Selected class: <span className="font-semibold text-blue-600">{selectedClass}</span>
+          </div>
+        )}
+      </div>
 
       {/* List/Unlist Button and Status */}
       <div className="mt-4 flex justify-center">
@@ -304,23 +344,15 @@ const TrainCard = ({ train }) => {
           <div className="text-blue-600 font-medium">
             You have been unlisted from this train successfully!
           </div>
-        ) : showClassSelection ? (
-          <button
-            onClick={handleListYourself}
-            disabled={isListing || !selectedClass}
-            className={`text-white font-semibold px-8 py-3 rounded-lg transition-all ${
-              !selectedClass ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {isListing ? "Processing..." : "Confirm Listing"}
-          </button>
         ) : (
           <button
             onClick={handleStartListing}
             disabled={isListing}
-            className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-all disabled:bg-blue-300"
+            className={`text-white font-semibold px-8 py-3 rounded-lg transition-all ${
+              selectedClass ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-300 cursor-not-allowed"
+            }`}
           >
-            {isListing ? "Processing..." : "List Yourself"}
+            {isListing ? "Processing..." : selectedClass ? "List Yourself" : "Select a Class First"}
           </button>
         )}
       </div>
