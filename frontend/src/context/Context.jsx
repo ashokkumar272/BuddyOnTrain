@@ -6,6 +6,8 @@ const TrainContext = createContext();
 export const TrainProvider = ({ children }) => {
   const [toStation, setToStation] = useState('');
   const [fromStation, setFromStation] = useState('');
+  const [toStationCode, setToStationCode] = useState('');
+  const [fromStationCode, setFromStationCode] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [trains, setTrains] = useState([]);
   const [list, setList] = useState(false);
@@ -35,27 +37,39 @@ export const TrainProvider = ({ children }) => {
       setActiveView('buddies');
     }
   }, [list, suggestions]);
-
   const searchTrains = async () => {
-    if (!fromStation || !toStation || !selectedDate) {
+    if (!fromStationCode || !toStationCode || !selectedDate) {
+      setError('Please select valid stations and date');
       return;
     }
+    
+    setLoading(true);
+    setError(null);
+    
     const formattedDate = selectedDate.split("-").reverse().join("-");
-    const url = `http://localhost:4000/api/trains?from=${fromStation}&to=${toStation}&train_date=${formattedDate}`;
+    const url = `http://localhost:4000/api/trains?from=${fromStationCode}&to=${toStationCode}&train_date=${formattedDate}`;
+    
     try {
       const response = await fetch(url);
       const result = await response.json();
       console.log(result);
-      setTrains(result.data);
+      if (result.status) {
+        setTrains(result.data);
+      } else {
+        setError(result.message || 'Failed to fetch trains');
+        setTrains([]);
+      }
     } catch (error) {
       console.error("Error fetching trains:", error);
+      setError('Failed to fetch trains. Please try again.');
       setTrains([]);
+    } finally {
+      setLoading(false);
     }
   };
-
   const findBuddies = async () => {
-    if (!fromStation || !toStation || !selectedDate) {
-      setError('Please fill in all search fields');
+    if (!fromStationCode || !toStationCode || !selectedDate) {
+      setError('Please select valid stations and date');
       return;
     }
 
@@ -68,8 +82,8 @@ export const TrainProvider = ({ children }) => {
       const formattedDate = selectedDate.split("-").reverse().join("-");
       
       console.log("Finding buddies with params:", {
-        from: fromStation,
-        to: toStation,
+        from: fromStationCode,
+        to: toStationCode,
         date: formattedDate,
         originalDate: selectedDate
       });
@@ -84,8 +98,8 @@ export const TrainProvider = ({ children }) => {
       // Make API request to find travel buddies
       const response = await axiosInstance.get('/api/users/travel-buddies', {
         params: {
-          from: fromStation,
-          to: toStation,
+          from: fromStationCode,
+          to: toStationCode,
           date: formattedDate
         }
       });
@@ -122,7 +136,6 @@ export const TrainProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
   return (
     <TrainContext.Provider
       value={{
@@ -130,6 +143,10 @@ export const TrainProvider = ({ children }) => {
         setToStation,
         fromStation,
         setFromStation,
+        toStationCode,
+        setToStationCode,
+        fromStationCode,
+        setFromStationCode,
         selectedDate,
         setSelectedDate,
         trains,
@@ -144,6 +161,7 @@ export const TrainProvider = ({ children }) => {
         findBuddies,
         loading,
         error,
+        setError,
         activeView,
         toggleView
       }}
