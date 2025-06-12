@@ -5,6 +5,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const trainRoute = require('./routes/findTrainRoute');
+const stationRoute = require('./routes/stationRoute');
 const userRoute = require('./routes/userRoute');
 const friendRoute = require('./routes/friendRoute');
 const messageRoute = require('./routes/messageRoute');
@@ -28,6 +29,7 @@ app.get('/', (req, res)=>{
 })
 
 app.use('/api', trainRoute)
+app.use('/api/stations', stationRoute)
 app.use('/api/users', userRoute)
 app.use('/api/friends', friendRoute)
 app.use('/api/messages', messageRoute)

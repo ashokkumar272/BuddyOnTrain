@@ -18,13 +18,8 @@ const findTrains = async (req, res) => {
     const response = await axios.get(apiUrl);
       // Extract useful train data from the API response
     const trainList = response.data?.data?.trainList || [];
-    
-    // Map the API response to a simplified format with only useful data
+      // Map the API response to a simplified format with only useful data
     const formattedTrains = trainList.map(train => {
-      // Get the best available class with lowest fare
-      const bestClass = train.avlClassesSorted?.[0];
-      const bestClassInfo = train.availabilityCache?.[bestClass];
-      
       // Get availability and prediction info for all classes
       const classesInfo = [];
       if (train.avlClassesSorted && train.availabilityCache) {
@@ -65,19 +60,10 @@ const findTrains = async (req, res) => {
         },
         availableClasses: train.avlClassesSorted || [],
         hasPantry: train.hasPantry,
-        trainRating: train.trainRating,
-        runningDays: train.runningDays,
+        trainRating: train.trainRating,        runningDays: train.runningDays,
         // Include fare and availability info for all available classes
-        classesInfo: classesInfo,
-        // Keep the best class info for backward compatibility
-        bestClassInfo: bestClassInfo ? {
-          class: bestClass,
-          fare: bestClassInfo.fare,
-          availability: bestClassInfo.availabilityDisplayName,
-          prediction: bestClassInfo.predictionDisplayName,
-          predictionPercentage: bestClassInfo.predictionPercentage
-        } : null      };
-    });
+        classesInfo: classesInfo
+      };    });
 
     // Build the response object
     const responseData = {
