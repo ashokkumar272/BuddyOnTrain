@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance, { isAuthenticated } from '../utils/axios';
-import Navbar from '../components/Navbar';
+import { Navbar } from '../components/layout';
 import io from 'socket.io-client';
 
 // Initialize WebSocket connection

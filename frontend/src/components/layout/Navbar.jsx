@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import axiosInstance, { removeToken, isAuthenticated } from '../utils/axios'
+import axiosInstance, { removeToken, isAuthenticated } from '../../utils/axios'
 
 const Navbar = () => {
   const [user, setUser] = useState(null)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import axiosInstance from "../utils/axios";
+import axiosInstance from "../../utils/axios";
 import ClassInfo from "./ClassInfo";
 
 const TrainCard = ({ train }) => {

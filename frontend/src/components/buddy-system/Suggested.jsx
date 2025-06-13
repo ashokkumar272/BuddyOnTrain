@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../utils/axios';
+import axiosInstance from '../../utils/axios';
 import { useNavigate } from 'react-router-dom';
 
 const Suggested = ({ id, name, profession, isFriend: initialIsFriend, travelDetails }) => {

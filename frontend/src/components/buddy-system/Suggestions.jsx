@@ -1,6 +1,6 @@
 import React from "react";
 import Suggested from "./Suggested";
-import { useTrainContext } from "../context/Context";
+import { useTrainContext } from "../../context/Context";
 
 const Suggestions = ({ suggestions, setSuggestions }) => {
   const { buddies, loading, toggleView } = useTrainContext();
