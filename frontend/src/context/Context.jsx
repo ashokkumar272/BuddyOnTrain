@@ -66,8 +66,7 @@ export const TrainProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-  const findBuddies = async () => {
+  };  const findBuddies = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
       return;
@@ -77,9 +76,9 @@ export const TrainProvider = ({ children }) => {
     setError(null);
 
     try {
-      // Format date for API request - using same format as searchTrains
-      // The backend will handle date parsing from this format
-      const formattedDate = selectedDate.split("-").reverse().join("-");
+      // For travel buddies API, send the date in ISO format (YYYY-MM-DD)
+      // This is more reliable for database date comparisons
+      const formattedDate = selectedDate; // Keep original YYYY-MM-DD format
       
       console.log("Finding buddies with params:", {
         from: fromStationCode,
@@ -92,7 +91,7 @@ export const TrainProvider = ({ children }) => {
       console.log("Date objects:", {
         originalDate: new Date(selectedDate),
         formattedDate: new Date(formattedDate),
-        formattedDateParts: formattedDate.split('-')
+        isValidDate: !isNaN(new Date(formattedDate).getTime())
       });
       
       // Make API request to find travel buddies

@@ -366,35 +366,50 @@ const findTravelBuddies = async (req, res) => {
       
       // Get current user for friendship check
       currentUser = await User.findById(excludeUserId);
-    }
-
-    // Parse date from input format (e.g., "25-05-2023")
+    }    // Parse date from input format
     console.log('Find Travel Buddies - Input date:', date);
     
-    // First, try to create a date object directly
-    let dateObj = new Date(date);
-    console.log('Find Travel Buddies - Direct parsing result:', dateObj);
+    // Create date object from YYYY-MM-DD format (ISO date string)
+    let dateObj = new Date(date + 'T00:00:00.000Z');
     
-    // If direct parsing gives invalid date, try to parse from DD-MM-YYYY format
+    console.log('Find Travel Buddies - Parsed date object:', dateObj);
+    
+    // If parsing failed, try alternative parsing methods
     if (isNaN(dateObj.getTime())) {
+      // Try parsing as DD-MM-YYYY format (fallback for legacy support)
       const dateParts = date.split('-');
       if (dateParts.length === 3) {
-        // Convert from DD-MM-YYYY to YYYY-MM-DD for proper Date parsing
-        dateObj = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
-        console.log('Find Travel Buddies - Parsed from DD-MM-YYYY:', dateObj);
+        // Check if it's DD-MM-YYYY or YYYY-MM-DD
+        if (dateParts[0].length === 4) {
+          // Already YYYY-MM-DD
+          dateObj = new Date(`${dateParts[0]}-${dateParts[1]}-${dateParts[2]}T00:00:00.000Z`);
+        } else {
+          // Convert from DD-MM-YYYY to YYYY-MM-DD
+          dateObj = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T00:00:00.000Z`);
+        }
+        console.log('Find Travel Buddies - Fallback parsing result:', dateObj);
       }
     }
     
-    // Set time to beginning of day
-    dateObj.setHours(0, 0, 0, 0);
-    const nextDay = new Date(dateObj);
-    nextDay.setHours(23, 59, 59, 999);
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Please use YYYY-MM-DD format.'
+      });
+    }
+    
+    // Create date range for the entire day (local time)
+    const startOfDay = new Date(dateObj);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(dateObj);
+    endOfDay.setUTCHours(23, 59, 59, 999);
     
     console.log('Find Travel Buddies - Final date range:', {
-      start: dateObj,
-      end: nextDay,
-      startISO: dateObj.toISOString(),
-      endISO: nextDay.toISOString()
+      input: date,
+      parsed: dateObj.toISOString(),
+      startOfDay: startOfDay.toISOString(),
+      endOfDay: endOfDay.toISOString()
     });
 
     // Log actual travel status data in the database
@@ -430,17 +445,14 @@ const findTravelBuddies = async (req, res) => {
     // First find all users with active status
     const activeUsers = await User.find(query).select('name username profession bio travelStatus friends');
     
-    console.log(`Find Travel Buddies - Found ${activeUsers.length} users with matching stations`);
-
-    // Then filter by date manually to ensure exact date comparison (ignoring time)
+    console.log(`Find Travel Buddies - Found ${activeUsers.length} users with matching stations`);    // Then filter by date manually to ensure exact date comparison
     const matchingUsers = activeUsers.filter(user => {
       if (!user.travelStatus || !user.travelStatus.travelDate) return false;
       
       const userTravelDate = new Date(user.travelStatus.travelDate);
-      // Compare only year, month, and day
-      return userTravelDate.getFullYear() === dateObj.getFullYear() &&
-             userTravelDate.getMonth() === dateObj.getMonth() &&
-             userTravelDate.getDate() === dateObj.getDate();
+      
+      // Compare dates within the day range
+      return userTravelDate >= startOfDay && userTravelDate <= endOfDay;
     });
     
     console.log(`Find Travel Buddies - After date filtering: ${matchingUsers.length} users match`);

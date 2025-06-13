@@ -28,10 +28,9 @@ const StationInput = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
   // Fetch suggestions from API
   const fetchSuggestions = async (cityName) => {
-    if (!cityName.trim() || cityName.length < 2) {
+    if (!cityName.trim() || cityName.length < 1) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -80,20 +79,17 @@ const StationInput = ({
         onStationSelect('', '');
       }
       return;
-    }
-
-    // Debounce API calls
+    }    // Debounce API calls
     debounceRef.current = setTimeout(() => {
       fetchSuggestions(newValue);
-    }, 300);
+    }, 200);
 
     // Update parent component with the input value
     onChange(newValue);
   };
-
   // Handle station selection
   const handleStationSelect = (stationName, stationCode, cityName) => {
-    const displayText = `${stationName} (${cityName})`;
+    const displayText = `${stationName} - ${stationCode}`;
     setInputValue(displayText);
     setSelectedStationCode(stationCode);
     setShowSuggestions(false);
@@ -129,47 +125,28 @@ const StationInput = ({
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
         </div>
-      )}
-
-      {/* Suggestions dropdown */}
+      )}      {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto">
           {suggestions.map((cityData, cityIndex) => (
             <div key={cityIndex}>
-              {/* City header */}
-              <div className="px-4 py-2 bg-gray-50 text-sm font-medium text-gray-700 border-b">
-                {cityData.city}
-              </div>
-              
               {/* Stations for this city */}
               {cityData.stations.map((station, stationIndex) => (
                 <div
                   key={`${cityIndex}-${stationIndex}`}
-                  className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
                   onClick={() => handleStationSelect(station.stationName, station.stationCode, cityData.city)}
                 >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {station.stationName}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {cityData.city}
-                      </div>
-                    </div>
-                    <div className="text-sm font-mono text-blue-600">
-                      {station.stationCode}
-                    </div>
+                  <div className="text-gray-900">
+                    {station.stationName} - {station.stationCode}
                   </div>
                 </div>
               ))}
             </div>
           ))}
         </div>
-      )}
-
-      {/* No suggestions message */}
-      {showSuggestions && suggestions.length === 0 && !loading && inputValue.trim().length >= 2 && (
+      )}{/* No suggestions message */}
+      {showSuggestions && suggestions.length === 0 && !loading && inputValue.trim().length >= 1 && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
           <div className="px-4 py-3 text-gray-500 text-center">
             No stations found for "{inputValue}"

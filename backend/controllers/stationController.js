@@ -35,41 +35,63 @@ const getStationSuggestions = async (req, res) => {
     }
 
     const suggestions = [];
-    const searchTerm = city.toLowerCase().replace(/\s+/g, '_');
+    const searchTerm = city.toLowerCase().trim();
+    const searchWords = searchTerm.split(/\s+/);
 
-    // Search for cities that match the input (case-insensitive, partial matching)
+    // Search for cities and stations that match the input
     Object.keys(stationsData.railway_stations_by_city).forEach(cityKey => {
-      const cityName = cityKey.toLowerCase();
+      const cityName = cityKey.toLowerCase().replace(/_/g, ' ');
+      const stations = stationsData.railway_stations_by_city[cityKey];
       
-      // Check if the city name contains the search term
-      if (cityName.includes(searchTerm)) {
-        const stations = stationsData.railway_stations_by_city[cityKey];
+      // Check if city name matches the search term
+      const cityMatches = searchWords.every(word => 
+        cityName.includes(word) || cityKey.toLowerCase().includes(word.replace(/\s+/g, '_'))
+      );
+
+      // Also check if any station name matches
+      const matchingStations = stations.filter(station => {
+        const stationName = station.station_name.toLowerCase();
+        return searchWords.every(word => 
+          stationName.includes(word) || station.station_code.toLowerCase().includes(word)
+        );
+      });
+
+      if (cityMatches || matchingStations.length > 0) {
+        // If city matches, include all stations
+        const stationsToInclude = cityMatches ? stations : matchingStations;
         
         suggestions.push({
           city: cityKey.replace(/_/g, ' '), // Convert back to readable format
           originalCityKey: cityKey,
-          stations: stations.map(station => ({
+          matchType: cityMatches ? 'city' : 'station',
+          stations: stationsToInclude.map(station => ({
             stationName: station.station_name,
-            stationCode: station.station_code
+            stationCode: station.station_code,
+            displayText: `${station.station_name} - ${station.station_code}`
           }))
         });
       }
     });
 
-    // Sort suggestions by relevance (exact matches first, then partial matches)
+    // Sort suggestions by relevance
     suggestions.sort((a, b) => {
-      const aExact = a.originalCityKey.toLowerCase() === searchTerm;
-      const bExact = b.originalCityKey.toLowerCase() === searchTerm;
+      // Exact city matches first
+      const aExactCity = a.originalCityKey.toLowerCase().replace(/_/g, ' ') === searchTerm;
+      const bExactCity = b.originalCityKey.toLowerCase().replace(/_/g, ' ') === searchTerm;
       
-      if (aExact && !bExact) return -1;
-      if (!aExact && bExact) return 1;
+      if (aExactCity && !bExactCity) return -1;
+      if (!aExactCity && bExactCity) return 1;
       
-      // If both are partial matches, sort alphabetically
+      // City matches before station matches
+      if (a.matchType === 'city' && b.matchType === 'station') return -1;
+      if (a.matchType === 'station' && b.matchType === 'city') return 1;
+      
+      // Alphabetical order for same type
       return a.city.localeCompare(b.city);
     });
 
     // Limit results to avoid overwhelming the user
-    const limitedSuggestions = suggestions.slice(0, 10);
+    const limitedSuggestions = suggestions.slice(0, 12);
 
     res.json({
       status: true,
