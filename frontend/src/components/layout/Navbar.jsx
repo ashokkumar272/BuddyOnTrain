@@ -167,8 +167,6 @@ const Navbar = () => {
           </svg>
         </button>
         <div className='hidden lg:flex items-center gap-4'>
-          <NavLink to="/" className='text-gray-600 hover:text-blue-600 transition-colors'>Home</NavLink>
-          
           {loading ? (
             <span className="text-gray-400">Loading...</span>
           ) : user ? (

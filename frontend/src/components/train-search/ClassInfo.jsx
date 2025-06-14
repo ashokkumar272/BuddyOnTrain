@@ -11,7 +11,6 @@ const ClassInfo = ({
 
   return (
     <div className="mt-2 ">
-      <span className="text-sm font-medium text-gray-700 block mb-3">Available Classes</span>
       
       {train.classesInfo && train.classesInfo.length > 0 ? (
         <div className="flex gap-4 overflow-x-auto">

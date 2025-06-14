@@ -11,7 +11,7 @@ const TrainList = () => {
   return (
     <div>
       {trains.length > 0 ? (
-        <ul className="h-[calc(100vh-170px)] lg:h-[calc(100vh-190px)] overflow-y-auto shadow-md rounded-lg">
+        <ul className="h-[calc(100vh-154px)] lg:h-[calc(100vh-154px)] overflow-y-auto shadow-md rounded-lg">
           {trains.map((train) => (
             <TrainCard key={train.train_number} train={train} />
           ))}
