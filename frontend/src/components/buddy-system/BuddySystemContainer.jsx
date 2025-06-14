@@ -3,9 +3,9 @@ import Suggestions from './Suggestions';
 import { useTrainContext } from '../../context/Context';
 
 const BuddySystemContainer = () => {
-  const { suggestions, activeView, setSuggestions } = useTrainContext();
+  const { suggestions, setSuggestions } = useTrainContext();
 
-  if (!suggestions || (activeView !== 'buddies' && window.innerWidth < 1024)) {
+  if (!suggestions) {
     return null;
   }
 

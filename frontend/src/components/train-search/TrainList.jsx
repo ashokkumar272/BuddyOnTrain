@@ -8,11 +8,10 @@ const TrainList = () => {
   if (!list || (activeView !== 'trains' && window.innerWidth < 1024)) {
     return null;
   }
-
   return (
     <div>
       {trains.length > 0 ? (
-        <ul className="max-h-[100vh] overflow-y-auto shadow-md rounded-lg">
+        <ul className="h-[calc(100vh-170px)] lg:h-[calc(100vh-190px)] overflow-y-auto shadow-md rounded-lg">
           {trains.map((train) => (
             <TrainCard key={train.train_number} train={train} />
           ))}

@@ -250,7 +250,8 @@ const TrainCard = ({ train }) => {
           selectedClass={selectedClass}
           onClassSelect={handleClassSelect}
         />
-      </div>      <div className="mt-3 pt-3 flex justify-center">
+      </div>      
+      <div className="flex justify-center">
         {isListed && listingSuccess ? (
           <div className="flex flex-col items-center w-full">
             <div className="text-green-600 font-medium mb-3 text-center">
@@ -274,7 +275,7 @@ const TrainCard = ({ train }) => {
           <button
             onClick={handleListYourself}
             disabled={isListing}
-            className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800 shadow-md font-semibold px-8 py-3 rounded-lg transition-all w-full max-w-xs"
+            className="mt-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800 shadow-md font-semibold px-8 py-3 rounded-lg transition-all w-full max-w-xs"
           >
             {isListing ? "Processing..." : "List Yourself on This Train"}
           </button>
