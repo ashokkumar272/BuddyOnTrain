@@ -1010,8 +1010,12 @@
     ],
     "DADAR": [
       {
-        "station_name": "DADAR",
+        "station_name": "DADAR CENTRAL",
         "station_code": "DR"
+      },
+      {
+        "station_name": "DADAR WESTERN",
+        "station_code": "DDR"
       }
     ],
     "DARBHANGA": [
@@ -1046,7 +1050,7 @@
     ],
     "DELHI": [
       {
-        "station_name": "DELHI",
+        "station_name": "OLD DELHI",
         "station_code": "DLI"
       },
       {
@@ -1068,6 +1072,14 @@
       {
         "station_name": "ANAND VIHAR TERMINUS",
         "station_code": "ANVT"
+      },
+      {
+        "station_name": "NIZAMUDDIN",
+        "station_code": "NZM"
+      },
+      {
+        "station_name": "DELHI SABZI MANDI",
+        "station_code": "SZM"
       }
     ],
     "DHANBAD": [
@@ -1490,8 +1502,8 @@
     ],
     "JHANSI": [
       {
-        "station_name": "JHANSI",
-        "station_code": "JHS"
+        "station_name": "V LAKSHMIBAI",
+        "station_code": "VGLJ"
       }
     ],
     "JHARSUGUDA": [
@@ -1925,11 +1937,11 @@
     "MUMBAI": [
       {
         "station_name": "MUMBAI CENTRAL",
-        "station_code": "BCT"
+        "station_code": "MMCT"
       },
       {
-        "station_name": "MUMBAI CST",
-        "station_code": "CSTM"
+        "station_name": "CHHATRAPATI SHIVAJI MAHARAJ (T)",
+        "station_code": "CSMT"
       },
       {
         "station_name": "LOKMANYA TILAK (T)",
@@ -1938,6 +1950,18 @@
       {
         "station_name": "BANDRA (T)",
         "station_code": "BDTS"
+      },
+      {
+        "station_name": "DADAR",
+        "station_code": "DDR"
+      },
+      {
+        "station_name": "KURLA",
+        "station_code": "CLA"
+      },
+      {
+        "station_name": "BORIVALI",
+        "station_code": "BVI"
       }
     ],
     "MUZAFFARPUR": [
@@ -2022,12 +2046,6 @@
       {
         "station_name": "NIZAMABAD",
         "station_code": "NZB"
-      }
-    ],
-    "NIZAMUDDIN": [
-      {
-        "station_name": "NIZAMUDDIN",
-        "station_code": "NZM"
       }
     ],
     "OKHA": [

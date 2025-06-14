@@ -127,17 +127,17 @@ const StationInput = ({
         </div>
       )}      {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg shadow-lg max-h-64 overflow-y-auto backdrop-saturate-150">
           {suggestions.map((cityData, cityIndex) => (
             <div key={cityIndex}>
               {/* Stations for this city */}
               {cityData.stations.map((station, stationIndex) => (
                 <div
                   key={`${cityIndex}-${stationIndex}`}
-                  className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
+                  className="px-4 py-3 hover:bg-white/30 cursor-pointer border-b border-white/20 last:border-b-0 transition-colors duration-150"
                   onClick={() => handleStationSelect(station.stationName, station.stationCode, cityData.city)}
                 >
-                  <div className="text-gray-900">
+                  <div className="text-gray-900 font-medium">
                     {station.stationName} - {station.stationCode}
                   </div>
                 </div>
@@ -147,8 +147,8 @@ const StationInput = ({
         </div>
       )}{/* No suggestions message */}
       {showSuggestions && suggestions.length === 0 && !loading && inputValue.trim().length >= 1 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
-          <div className="px-4 py-3 text-gray-500 text-center">
+        <div className="absolute z-50 w-full mt-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg shadow-lg backdrop-saturate-150">
+          <div className="px-4 py-3 text-gray-700 text-center font-medium">
             No stations found for "{inputValue}"
           </div>
         </div>

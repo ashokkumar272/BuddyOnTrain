@@ -4,7 +4,7 @@ import { ViewSwitcher, ContentDivider } from "./common";
 
 const Hero = () => {
   return (
-    <div className="flex flex-col lg:flex-row lg:justify-around relative">
+    <div className="flex flex-col lg:flex-row lg:justify-around items-center lg:items-start relative w-full max-w-6xl mx-auto px-4">
       <ViewSwitcher />
       <TrainSearchContainer />
       <ContentDivider />

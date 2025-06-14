@@ -167,11 +167,10 @@ const TrainCard = ({ train }) => {
       setIsListing(false);
     }
   };
-
   return (
     <li
       key={train.trainNumber || train.train_number}
-      className="bg-white p-6 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all mb-6 relative"
+      className="bg-white/70 backdrop-blur-sm p-6 rounded-xl border border-gray-300/50 shadow-sm hover:shadow-md transition-all mt-4 relative"
     >
       {/* Ribbon for listed status */}
       {isListed && listingSuccess && (
