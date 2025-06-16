@@ -4,8 +4,17 @@ import axiosInstance, { isAuthenticated } from '../utils/axios';
 import { Navbar } from '../components/layout';
 import io from 'socket.io-client';
 
+// Function to get the socket URL
+const getSocketURL = () => {
+  if (import.meta.env.DEV) {
+    const host = window.location.hostname;
+    return `http://${host}:4000`;
+  }
+  return 'http://localhost:4000';
+};
+
 // Initialize WebSocket connection
-const socket = io('http://localhost:4000');
+const socket = io(getSocketURL());
 
 const ChatPage = () => {
   const { userId } = useParams();

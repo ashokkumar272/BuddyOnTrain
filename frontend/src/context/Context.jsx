@@ -88,7 +88,6 @@ export const TrainProvider = ({ children }) => {
   return trainsWithPriority;
 };
 
-
   const searchTrains = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
@@ -99,10 +98,10 @@ export const TrainProvider = ({ children }) => {
     setError(null);
     
     const formattedDate = selectedDate.split("-").reverse().join("-");
-    const url = `http://localhost:4000/api/trains?from=${fromStationCode}&to=${toStationCode}&train_date=${formattedDate}`;
-      try {
-      const response = await fetch(url);
-      const result = await response.json();
+    
+    try {
+      const response = await axiosInstance.get(`/api/trains?from=${fromStationCode}&to=${toStationCode}&train_date=${formattedDate}`);
+      const result = response.data;
       console.log(result);
       if (result.status) {
         // Sort trains to prioritize exact station code matches
@@ -119,7 +118,7 @@ export const TrainProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };  const findBuddies = async () => {
+  };const findBuddies = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
       return;

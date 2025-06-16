@@ -51,12 +51,22 @@ const Login = () => {
           // If registration, redirect to profile setup
           navigate('/profile-setup')
         }
+      }    } catch (error) {
+      console.error('Login/Register error:', error);
+      
+      // Handle different types of errors
+      if (error.code === 'ECONNABORTED') {
+        setError('Request timed out. Please check your internet connection and try again.');
+      } else if (error.code === 'ERR_NETWORK') {
+        setError('Network error. Please check your connection and make sure the server is running.');
+      } else if (error.response?.status === 0) {
+        setError('Cannot connect to server. Please check if the backend is running.');
+      } else {
+        setError(
+          error.response?.data?.message || 
+          'An error occurred. Please try again.'
+        );
       }
-    } catch (error) {
-      setError(
-        error.response?.data?.message || 
-        'An error occurred. Please try again.'
-      )
     } finally {
       setLoading(false)
     }

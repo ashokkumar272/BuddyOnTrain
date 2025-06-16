@@ -14,10 +14,18 @@ const Message = require('./models/Message');
 
 dotenv.config()
 connectToDB()
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000; // Use port 5000 consistently
 
 const app = express()
-app.use(cors())
+
+// Enhanced CORS configuration for mobile devices
+app.use(cors({
+  origin: '*', // Allow all origins for development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}))
+
 app.use(express.json()) // For parsing application/json
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -107,7 +115,8 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
+    console.log(`Access from mobile using your computer's IP address on port ${PORT}`);
 });
 

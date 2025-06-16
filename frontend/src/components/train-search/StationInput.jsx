@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axiosInstance from '../../utils/axios';
 
 const StationInput = ({ 
   value, 
@@ -28,7 +29,7 @@ const StationInput = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  // Fetch suggestions from API
+  // Fetch suggestions from API using axios instance
   const fetchSuggestions = async (cityName) => {
     if (!cityName.trim() || cityName.length < 1) {
       setSuggestions([]);
@@ -37,18 +38,23 @@ const StationInput = ({
     }
 
     setLoading(true);
+    console.log('Fetching suggestions for:', cityName); // Debug log
+    
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/stations/suggestions?city=${encodeURIComponent(cityName)}`
+      const response = await axiosInstance.get(
+        `/api/stations/suggestions?city=${encodeURIComponent(cityName)}`
       );
-      const data = await response.json();
       
-      if (data.status && data.data.suggestions) {
-        setSuggestions(data.data.suggestions);
+      console.log('API Response:', response.data); // Debug log
+      
+      if (response.data.status && response.data.data.suggestions) {
+        setSuggestions(response.data.data.suggestions);
         setShowSuggestions(true);
+        console.log('Set suggestions:', response.data.data.suggestions); // Debug log
       } else {
         setSuggestions([]);
         setShowSuggestions(false);
+        console.log('No suggestions received'); // Debug log
       }
     } catch (error) {
       console.error('Error fetching station suggestions:', error);
@@ -58,7 +64,6 @@ const StationInput = ({
       setLoading(false);
     }
   };
-
   // Handle input changes with debouncing
   const handleInputChange = (e) => {
     const newValue = e.target.value;
@@ -79,15 +84,18 @@ const StationInput = ({
         onStationSelect('', '');
       }
       return;
-    }    // Debounce API calls
+    }
+
+    // Debounce API calls - shorter delay for mobile
     debounceRef.current = setTimeout(() => {
       fetchSuggestions(newValue);
-    }, 200);
+    }, 150); // Reduced from 200ms to 150ms for better mobile experience
 
     // Update parent component with the input value
     onChange(newValue);
   };
-  // Handle station selection
+
+  // Handle station selection with both mouse and touch events
   const handleStationSelect = (stationName, stationCode, cityName) => {
     const displayText = `${stationName} - ${stationCode}`;
     setInputValue(displayText);
@@ -106,18 +114,34 @@ const StationInput = ({
     if (suggestions.length > 0) {
       setShowSuggestions(true);
     }
+    // On mobile, also trigger search if there's already text
+    if (inputValue.trim() && inputValue.length >= 1) {
+      fetchSuggestions(inputValue);
+    }
   };
 
-  return (
-    <div className="relative" ref={suggestionRef}>
+  // Handle blur with delay to allow selection
+  const handleBlur = () => {
+    // Delay hiding suggestions to allow for selection
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
+  };
+
+  return (    <div className="relative" ref={suggestionRef}>
       <input
         type="text"
         value={inputValue}
         onChange={handleInputChange}
         onFocus={handleFocus}
+        onBlur={handleBlur}
         placeholder={placeholder}
         className={`${className} ${loading ? 'pr-10' : ''}`}
         autoComplete="off"
+        autoCapitalize="words"
+        autoCorrect="off"
+        spellCheck="false"
+        inputMode="text"
       />
       
       {/* Loading indicator */}
@@ -127,16 +151,22 @@ const StationInput = ({
         </div>
       )}      {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white backdrop-blur-sm border border-gray-300/50 shadow-lg max-h-64 overflow-y-auto">
+        <div className="absolute z-[9999] w-full mt-1 bg-white backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg max-h-64 overflow-y-auto">
           {suggestions.map((cityData, cityIndex) => (
             <div key={cityIndex}>
               {/* Stations for this city */}
-              {cityData.stations.map((station, stationIndex) => (                <div
+              {cityData.stations.map((station, stationIndex) => (
+                <div
                   key={`${cityIndex}-${stationIndex}`}
-                  className="px-4 py-3 hover:bg-white/40 cursor-pointer border-b border-gray-200/50 last:border-b-0 transition-colors duration-150"
+                  className="px-4 py-4 hover:bg-blue-50 active:bg-blue-100 cursor-pointer border-b border-gray-200/50 last:border-b-0 transition-colors duration-150 first:rounded-t-xl last:rounded-b-xl"
                   onClick={() => handleStationSelect(station.stationName, station.stationCode, cityData.city)}
+                  onTouchStart={() => {}} // Enable touch events on mobile
+                  style={{ 
+                    minHeight: '48px', // Ensure minimum touch target size for mobile
+                    WebkitTapHighlightColor: 'rgba(59, 130, 246, 0.1)' // Better tap feedback on iOS
+                  }}
                 >
-                  <div className="text-gray-900 font-medium">
+                  <div className="text-gray-900 font-medium text-sm md:text-base">
                     {station.stationName} - {station.stationCode}
                   </div>
                 </div>
@@ -144,10 +174,10 @@ const StationInput = ({
             </div>
           ))}
         </div>
-      )}      {/* No suggestions message */}
+      )}{/* No suggestions message */}
       {showSuggestions && suggestions.length === 0 && !loading && inputValue.trim().length >= 1 && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white/70 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg">
-          <div className="px-4 py-3 text-gray-700 text-center font-medium">
+        <div className="absolute z-[9999] w-full mt-1 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg">
+          <div className="px-4 py-4 text-gray-700 text-center font-medium text-sm md:text-base">
             No stations found for "{inputValue}"
           </div>
         </div>
