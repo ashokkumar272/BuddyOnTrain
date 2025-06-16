@@ -71,10 +71,8 @@ const SearchForm = () => {
         day: 'numeric',
         year: 'numeric'
       });
-    };
-
-    return (
-      <div className="w-full lg:w-auto">
+    };    return (
+      <div className="w-full lg:w-auto relative z-[100]">
         <button
           onClick={() => setIsFormCollapsed(false)}
           className="w-full p-4 bg-white/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-300/50 hover:shadow-md transition-all flex items-center justify-between group"
@@ -125,9 +123,8 @@ const SearchForm = () => {
       </div>
     );
   }
-
   return (
-    <div className="w-full lg:w-auto">      {/* Collapse button for small screens with results */}
+    <div className="w-full lg:w-auto relative z-[100]">      {/* Collapse button for small screens with results */}
       {shouldShowCollapsedBar && !isFormCollapsed && (
         <div className="flex justify-end mb-2 lg:hidden">
           <button

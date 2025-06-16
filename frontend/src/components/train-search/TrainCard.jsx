@@ -162,21 +162,20 @@ const TrainCard = ({ train }) => {
       setListingError(
         error.response?.data?.message || 
         "An error occurred. Please try again."
-      );
-    } finally {
+      );    } finally {
       setIsListing(false);
     }
   };
-  return (    <li
+
+  return (<li
       key={train.trainNumber || train.train_number}
       className="bg-white/70 backdrop-blur-sm p-3 md:p-6 rounded-xl border border-gray-300/50 shadow-sm hover:shadow-md transition-all mt-2 md:mt-4 relative"
-    >
-      {/* Ribbon for listed status */}
+    >      {/* Ribbon for listed status */}
       {isListed && listingSuccess && (
         <div className="absolute top-0 right-0 bg-green-500 text-white px-4 py-1 rounded-bl-lg rounded-tr-lg font-medium text-sm z-10">
           You're Listed
         </div>
-      )}        <div className="flex justify-between items-start mb-2 md:mb-4">
+      )}<div className="flex justify-between items-start mb-2 md:mb-4">
         <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-0.5 md:mb-1 flex items-center">
           <span className="mr-2">{train.trainName || train.train_name}</span>
           <span className="text-blue-600 font-medium text-sm md:text-base">

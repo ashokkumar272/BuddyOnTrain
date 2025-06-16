@@ -35,8 +35,60 @@ export const TrainProvider = ({ children }) => {
       setActiveView('trains');
     } else if (suggestions) {
       setActiveView('buddies');
+    }  }, [list, suggestions]);  // Function to sort trains by exact station code matches with priority levels
+  
+  const sortTrainsByStationMatch = (trains, fromCode, toCode) => {
+  if (!Array.isArray(trains)) return [];
+
+  console.log('Sorting trains by station match:', { fromCode, toCode });
+
+  // Preprocess trains with priority
+  const trainsWithPriority = trains.map(train => {
+    const fromMatch = train.fromStation?.code === fromCode;
+    const toMatch = train.toStation?.code === toCode;
+    
+    let priority = 4;
+    if (fromMatch && toMatch) priority = 1;
+    else if (fromMatch) priority = 2;
+    else if (toMatch) priority = 3;
+
+    return { ...train, priority };
+  });
+
+  // Sort by priority
+  trainsWithPriority.sort((a, b) => a.priority - b.priority);
+
+  // Group by priority for logging
+  const grouped = [1, 2, 3, 4].reduce((acc, p) => {
+    acc[p] = trainsWithPriority
+      .filter(t => t.priority === p)
+      .map(t => ({
+        number: t.trainNumber,
+        name: t.trainName,
+        from: t.fromStation?.code,
+        to: t.toStation?.code
+      }));
+    return acc;
+  }, {});
+
+  // Log grouped summary
+  [1, 2, 3, 4].forEach(p => {
+    if (grouped[p].length > 0) {
+      console.log(`Priority ${p} (${[
+        '',
+        'Both stations match',
+        'Only departure matches',
+        'Only destination matches',
+        'No matches'
+      ][p]}): ${grouped[p].length} trains`);
+      console.log(grouped[p]);
     }
-  }, [list, suggestions]);
+  });
+
+  return trainsWithPriority;
+};
+
+
   const searchTrains = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
@@ -48,13 +100,14 @@ export const TrainProvider = ({ children }) => {
     
     const formattedDate = selectedDate.split("-").reverse().join("-");
     const url = `http://localhost:4000/api/trains?from=${fromStationCode}&to=${toStationCode}&train_date=${formattedDate}`;
-    
-    try {
+      try {
       const response = await fetch(url);
       const result = await response.json();
       console.log(result);
       if (result.status) {
-        setTrains(result.data);
+        // Sort trains to prioritize exact station code matches
+        const sortedTrains = sortTrainsByStationMatch(result.data, fromStationCode, toStationCode);
+        setTrains(sortedTrains);
       } else {
         setError(result.message || 'Failed to fetch trains');
         setTrains([]);
@@ -76,8 +129,6 @@ export const TrainProvider = ({ children }) => {
     setError(null);
 
     try {
-      // For travel buddies API, send the date in ISO format (YYYY-MM-DD)
-      // This is more reliable for database date comparisons
       const formattedDate = selectedDate; // Keep original YYYY-MM-DD format
       
       console.log("Finding buddies with params:", {

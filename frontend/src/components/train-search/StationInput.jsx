@@ -127,7 +127,7 @@ const StationInput = ({
         </div>
       )}      {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+        <div className="absolute z-[9999] w-full mt-1 bg-white backdrop-blur-sm border border-gray-300/50 shadow-lg max-h-64 overflow-y-auto">
           {suggestions.map((cityData, cityIndex) => (
             <div key={cityIndex}>
               {/* Stations for this city */}
@@ -146,7 +146,7 @@ const StationInput = ({
         </div>
       )}      {/* No suggestions message */}
       {showSuggestions && suggestions.length === 0 && !loading && inputValue.trim().length >= 1 && (
-        <div className="absolute z-50 w-full mt-1 bg-white/70 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg">
+        <div className="absolute z-[9999] w-full mt-1 bg-white/70 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg">
           <div className="px-4 py-3 text-gray-700 text-center font-medium">
             No stations found for "{inputValue}"
           </div>
