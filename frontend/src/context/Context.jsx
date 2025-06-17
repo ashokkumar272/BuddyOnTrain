@@ -12,10 +12,10 @@ export const TrainProvider = ({ children }) => {
   const [trains, setTrains] = useState([]);
   const [list, setList] = useState(false);
   const [suggestions, setSuggestions] = useState(false);
-  const [buddies, setBuddies] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [buddies, setBuddies] = useState([]);  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeView, setActiveView] = useState('trains'); // 'trains' or 'buddies'
+  const [searchInitiated, setSearchInitiated] = useState(false); // Track if any search has been initiated
 
   // Toggle between trains and buddies view for mobile
   const toggleView = (view) => {
@@ -28,14 +28,19 @@ export const TrainProvider = ({ children }) => {
       setActiveView(prev => prev === 'trains' ? 'buddies' : 'trains');
     }
   };
-
   // Automatically switch views when actions are performed
   useEffect(() => {
     if (list && !suggestions) {
       setActiveView('trains');
-    } else if (suggestions) {
+    } else if (suggestions && !list) {
       setActiveView('buddies');
-    }  }, [list, suggestions]);  // Function to sort trains by exact station code matches with priority levels
+    } else if (suggestions && list) {
+      // Both available, keep current view or default to trains if none set
+      if (activeView !== 'trains' && activeView !== 'buddies') {
+        setActiveView('trains');
+      }
+    }
+  }, [list, suggestions, activeView]);// Function to sort trains by exact station code matches with priority levels
   
   const sortTrainsByStationMatch = (trains, fromCode, toCode) => {
   if (!Array.isArray(trains)) return [];
@@ -87,13 +92,13 @@ export const TrainProvider = ({ children }) => {
 
   return trainsWithPriority;
 };
-
   const searchTrains = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
       return;
     }
     
+    setSearchInitiated(true); // Mark that a search has been initiated
     setLoading(true);
     setError(null);
     
@@ -118,12 +123,13 @@ export const TrainProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };const findBuddies = async () => {
+  };  const findBuddies = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
       return;
     }
 
+    setSearchInitiated(true); // Mark that a search has been initiated
     setLoading(true);
     setError(null);
 
@@ -207,12 +213,13 @@ export const TrainProvider = ({ children }) => {
         searchTrains,
         buddies,
         setBuddies,
-        findBuddies,
-        loading,
+        findBuddies,        loading,
         error,
         setError,
         activeView,
-        toggleView
+        toggleView,
+        searchInitiated,
+        setSearchInitiated
       }}
     >
       {children}

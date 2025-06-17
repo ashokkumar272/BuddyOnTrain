@@ -186,11 +186,6 @@ const TrainCard = ({ train }) => {
           <span className="bg-blue-100 text-blue-700 px-1.5 md:px-2 py-0.5 md:py-1 rounded">
             {train.train_date}
           </span>
-          {train.trainType && (
-            <span className="bg-purple-100 text-purple-700 px-1.5 md:px-2 py-0.5 md:py-1 rounded">
-              {train.trainType}
-            </span>
-          )}
         </div>
       </div><div className="flex justify-between items-center mb-1 md:mb-2">
         <div className="space-y-0.5 md:space-y-1">

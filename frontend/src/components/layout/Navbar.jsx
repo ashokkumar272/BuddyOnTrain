@@ -144,7 +144,7 @@ const Navbar = () => {
   }
 
   return (
-    <div className='relative shadow-md bg-white'>
+    <div className='fixed top-0 left-0 right-0 z-[100] shadow-md bg-white'>
       <div className='flex justify-between items-center py-4 px-6 container mx-auto'>
         <h2 className='text-2xl lg:text-4xl font-bold text-blue-600'>FindBuddy</h2>
         <button

@@ -4,12 +4,13 @@ import { useTrainContext } from '../../context/Context';
 const ViewSwitcher = () => {
   const { list, suggestions, activeView, toggleView } = useTrainContext();
 
+  // Only show switcher when both trains and buddies are available on smaller screens
   if (!list && !suggestions) {
     return null;
   }
 
   return (
-    <div className="lg:hidden flex justify-center mb-4 mt-2">
+    <div className="lg:hidden flex justify-center mb-4 w-full">
       <div className="bg-gray-200 rounded-lg p-1 inline-flex">
         <button 
           onClick={() => toggleView('trains')}
@@ -18,6 +19,7 @@ const ViewSwitcher = () => {
             ? 'bg-white text-blue-600 shadow-sm' 
             : 'text-gray-600 hover:bg-gray-300'
           }`}
+          disabled={!list}
         >
           Trains
         </button>

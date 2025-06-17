@@ -4,7 +4,7 @@ import TrainList from './TrainList';
 import { useTrainContext } from '../../context/Context';
 
 const TrainSearchContainer = () => {
-  const { trains, list } = useTrainContext();
+  const { trains, list, activeView } = useTrainContext();
 
   // Check if we should show results (trains are searched and results exist)
   const hasResults = list && trains && trains.length > 0;
@@ -13,6 +13,8 @@ const TrainSearchContainer = () => {
     <div 
       className={`w-full lg:w-auto ${
         !hasResults ? 'flex flex-col justify-center min-h-[60vh]' : ''
+      } ${
+        hasResults && activeView !== 'trains' ? 'hidden lg:block' : 'block'
       }`}
     >
       <SearchForm />
