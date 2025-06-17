@@ -4,15 +4,16 @@ import TrainList from './TrainList';
 import { useTrainContext } from '../../context/Context';
 
 const TrainSearchContainer = () => {
-  const { trains, list, activeView } = useTrainContext();
+  const { trains, showTrainResults, activeView, suggestions } = useTrainContext();
 
   // Check if we should show results (trains are searched and results exist)
-  const hasResults = list && trains && trains.length > 0;
+  const hasResults = showTrainResults && trains && trains.length > 0;
+  const bothVisible = hasResults && suggestions;
 
   return (
     <div 
-      className={`w-full lg:w-auto ${
-        !hasResults ? 'flex flex-col justify-center min-h-[60vh]' : ''
+      className={`w-full ${
+        !hasResults ? 'flex flex-col justify-center' : ''
       } ${
         hasResults && activeView !== 'trains' ? 'hidden lg:block' : 'block'
       }`}

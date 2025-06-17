@@ -3,7 +3,7 @@ import TrainCard from './TrainCard';
 import { useTrainContext } from '../../context/Context';
 
 const TrainList = () => {
-  const { trains, list } = useTrainContext();
+  const { trains, showTrainResults } = useTrainContext();
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   // Handle responsive behavior
@@ -16,8 +16,7 @@ const TrainList = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  if (!list) {
+  if (!showTrainResults) {
     return null;
   }
 

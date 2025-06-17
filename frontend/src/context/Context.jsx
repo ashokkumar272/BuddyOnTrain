@@ -8,9 +8,9 @@ export const TrainProvider = ({ children }) => {
   const [fromStation, setFromStation] = useState('');
   const [toStationCode, setToStationCode] = useState('');
   const [fromStationCode, setFromStationCode] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [trains, setTrains] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');  const [trains, setTrains] = useState([]);
   const [list, setList] = useState(false);
+  const [showTrainResults, setShowTrainResults] = useState(false); // Separate state for train results
   const [suggestions, setSuggestions] = useState(false);
   const [buddies, setBuddies] = useState([]);  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -27,20 +27,19 @@ export const TrainProvider = ({ children }) => {
       // Toggle if no specific view provided
       setActiveView(prev => prev === 'trains' ? 'buddies' : 'trains');
     }
-  };
-  // Automatically switch views when actions are performed
+  };  // Automatically switch views when actions are performed
   useEffect(() => {
-    if (list && !suggestions) {
+    if (showTrainResults && !suggestions) {
       setActiveView('trains');
-    } else if (suggestions && !list) {
+    } else if (suggestions && !showTrainResults) {
       setActiveView('buddies');
-    } else if (suggestions && list) {
+    } else if (suggestions && showTrainResults) {
       // Both available, keep current view or default to trains if none set
       if (activeView !== 'trains' && activeView !== 'buddies') {
         setActiveView('trains');
       }
     }
-  }, [list, suggestions, activeView]);// Function to sort trains by exact station code matches with priority levels
+  }, [showTrainResults, suggestions, activeView]);// Function to sort trains by exact station code matches with priority levels
   
   const sortTrainsByStationMatch = (trains, fromCode, toCode) => {
   if (!Array.isArray(trains)) return [];
@@ -91,8 +90,7 @@ export const TrainProvider = ({ children }) => {
   });
 
   return trainsWithPriority;
-};
-  const searchTrains = async () => {
+};  const searchTrains = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
       return;
@@ -112,14 +110,17 @@ export const TrainProvider = ({ children }) => {
         // Sort trains to prioritize exact station code matches
         const sortedTrains = sortTrainsByStationMatch(result.data, fromStationCode, toStationCode);
         setTrains(sortedTrains);
+        setShowTrainResults(true); // Show train results
       } else {
         setError(result.message || 'Failed to fetch trains');
         setTrains([]);
+        setShowTrainResults(false);
       }
     } catch (error) {
       console.error("Error fetching trains:", error);
       setError('Failed to fetch trains. Please try again.');
       setTrains([]);
+      setShowTrainResults(false);
     } finally {
       setLoading(false);
     }
@@ -190,8 +191,7 @@ export const TrainProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-  return (
+  };  return (
     <TrainContext.Provider
       value={{
         toStation,
@@ -208,6 +208,8 @@ export const TrainProvider = ({ children }) => {
         setTrains,
         list,
         setList,
+        showTrainResults,
+        setShowTrainResults,
         suggestions,
         setSuggestions,
         searchTrains,

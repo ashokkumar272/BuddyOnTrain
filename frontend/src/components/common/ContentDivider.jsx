@@ -9,7 +9,7 @@ const ContentDivider = () => {
   }
 
   return (
-    <div className="hidden lg:flex w-px h-[600px] bg-gray-400 justify-center mx-4"></div>
+    <div className="hidden lg:flex w-px h-[600px] bg-gray-400 justify-center"></div>
   );
 };
 

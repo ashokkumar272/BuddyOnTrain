@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import StationInput from "./StationInput";
 import { useTrainContext } from "../../context/Context";
 
-const SearchForm = () => {
-  const {
+const SearchForm = () => {  const {
     toStation,
     setToStation,
     fromStation,
@@ -19,15 +18,18 @@ const SearchForm = () => {
     loading,
     error,
     setError,
-    setList,    toggleView,
+    setList,
+    showTrainResults,
+    setShowTrainResults,
+    toggleView,
     list,
     trains,
     searchInitiated,
     setSearchInitiated,
+    suggestions,
   } = useTrainContext();
-
-  // Check if search results are showing
-  const hasSearchResults = list && trains.length > 0;
+  // Check if search results are showing (either trains or buddy suggestions)
+  const hasSearchResults = (showTrainResults && trains.length > 0) || suggestions;
     // State to control form visibility on small screens
   const [isFormCollapsed, setIsFormCollapsed] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -56,14 +58,13 @@ const SearchForm = () => {
     }
   }, [searchInitiated, isSmallScreen]);  const handleSearchTrains = (e) => {
     e.preventDefault();
-    setList(true);
+    setShowTrainResults(true);
     toggleView("trains");
     searchTrains();
   };
 
   const handleFindBuddy = (e) => {
     e.preventDefault();
-    setList(true);
     toggleView("buddies");
     findBuddies();
   };
@@ -149,15 +150,13 @@ const SearchForm = () => {
             </svg>
           </button>
         </div>
-      )}      
-      <form
-        className={`flex flex-col lg:flex-row gap-4 justify-center items-center ${
+      )}        <form
+        className={`flex flex-col lg:flex-row gap-4 justify-center items-stretch ${
           hasSearchResults ? "p-3 md:p-4" : "p-4 md:p-6 lg:p-8"
-        } bg-white/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-300/50 hover:shadow-md transition-all`}
+        } bg-white/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-300/50 hover:shadow-md transition-all w-full`}
         onSubmit={handleSearchTrains}
-      >
-        {/* Input fields in column layout for small screens, row for larger screens */}
-        <div className="flex flex-col md:flex-row lg:flex-row gap-3 md:gap-4 w-full lg:w-auto max-w-4xl lg:max-w-none">          
+      >{/* Input fields in column layout for small screens, row for larger screens */}
+        <div className="flex flex-col md:flex-row lg:flex-row gap-3 md:gap-4 w-full">          
           <StationInput
             value={fromStation}
             onChange={setFromStation}
@@ -169,7 +168,7 @@ const SearchForm = () => {
             placeholder="Boarding Station"
             className={`border border-gray-300/50 bg-white/60 backdrop-blur-sm ${
               hasSearchResults ? "h-12" : "h-16 lg:h-16"
-            } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:w-64 shadow-sm placeholder-gray-500`}
+            } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:flex-1 shadow-sm placeholder-gray-500`}
           />
           <StationInput
             value={toStation}
@@ -182,23 +181,23 @@ const SearchForm = () => {
             placeholder="Destination Station"
             className={`border border-gray-300/50 bg-white/60 backdrop-blur-sm ${
               hasSearchResults ? "h-12" : "h-16 lg:h-16"
-            } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:w-64 shadow-sm placeholder-gray-500`}
+            } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:flex-1 shadow-sm placeholder-gray-500`}
           />
           <input
             onChange={(e) => setSelectedDate(e.target.value)}
             className={`border border-gray-300/50 bg-white/60 backdrop-blur-sm ${
               hasSearchResults ? "h-12" : "h-16 lg:h-16"
-            } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:w-52 shadow-sm`}
+            } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:w-48 lg:flex-shrink-0 shadow-sm`}
             value={selectedDate}
             type="date"
           />
         </div>
         {/* Buttons in column layout for small screens, row for larger screens */}
         <div
-          className={`flex flex-col sm:flex-row gap-3 w-full lg:w-auto max-w-lg lg:max-w-none justify-center ${
+          className={`flex flex-col sm:flex-row gap-3 w-full lg:w-auto lg:flex-shrink-0 justify-center ${
             hasSearchResults ? "mt-1 lg:mt-0" : "mt-2 lg:mt-0"
           }`}
-        >          <button
+        ><button
             onClick={handleSearchTrains}
             className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold px-6 sm:px-10 ${
               hasSearchResults ? "h-12 py-0" : "py-4 lg:h-16 lg:py-0"
