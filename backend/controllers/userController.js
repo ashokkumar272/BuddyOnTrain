@@ -1,37 +1,38 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { getAllStationCodesForMatchingCities } = require("../utils/railwayStations");
 
 // Generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'buddyontrain-secret', {
-    expiresIn: '30d',
+  return jwt.sign({ id }, process.env.JWT_SECRET || "buddyontrain-secret", {
+    expiresIn: "30d",
   });
 };
 
 // Register a new user
 const registerUser = async (req, res) => {
   try {
-    const { 
-      username, 
-      email, 
+    const {
+      username,
+      email,
       password,
       name,
       age,
       profession,
       bio,
-      travelStatus
+      travelStatus,
     } = req.body;
 
     // Check if user already exists
-    const userExists = await User.findOne({ 
-      $or: [{ email }, { username }]
+    const userExists = await User.findOne({
+      $or: [{ email }, { username }],
     });
 
     if (userExists) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'User already exists' 
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
       });
     }
 
@@ -49,35 +50,35 @@ const registerUser = async (req, res) => {
       profession,
       bio,
       travelStatus: travelStatus || {
-        boardingStation: '',
-        destinationStation: '',
+        boardingStation: "",
+        destinationStation: "",
         travelDate: null,
-        isActive: false
+        isActive: false,
       },
       online: true,
-      lastSeen: new Date()
+      lastSeen: new Date(),
     });
 
     if (user) {
       // Generate token
       const token = generateToken(user._id);
-      
+
       res.status(201).json({
         success: true,
         token,
-        userId: user._id
+        userId: user._id,
       });
     } else {
-      res.status(400).json({ 
-        success: false, 
-        message: 'Invalid user data' 
+      res.status(400).json({
+        success: false,
+        message: "Invalid user data",
       });
     }
   } catch (error) {
-    console.error('Error in registerUser:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error' 
+    console.error("Error in registerUser:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
     });
   }
 };
@@ -95,26 +96,26 @@ const loginUser = async (req, res) => {
       user.online = true;
       user.lastSeen = new Date();
       await user.save();
-      
+
       // Generate token
       const token = generateToken(user._id);
-      
+
       res.json({
         success: true,
         token,
-        userId: user._id
+        userId: user._id,
       });
     } else {
-      res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
+      res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
       });
     }
   } catch (error) {
-    console.error('Error in loginUser:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error' 
+    console.error("Error in loginUser:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
     });
   }
 };
@@ -123,37 +124,37 @@ const loginUser = async (req, res) => {
 const logoutUser = async (req, res) => {
   try {
     const { userId } = req.body;
-    
+
     if (!userId) {
       return res.status(400).json({
         success: false,
-        message: 'User ID is required'
+        message: "User ID is required",
       });
     }
 
     // Update user online status and last seen
     const user = await User.findById(userId);
-    
+
     if (user) {
       user.online = false;
       user.lastSeen = new Date();
       await user.save();
-      
+
       res.json({
         success: true,
-        message: 'Logged out successfully'
+        message: "Logged out successfully",
       });
     } else {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
   } catch (error) {
-    console.error('Error in logoutUser:', error);
+    console.error("Error in logoutUser:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: "Server error",
     });
   }
 };
@@ -161,8 +162,8 @@ const logoutUser = async (req, res) => {
 // Get current user
 const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
-    
+    const user = await User.findById(req.user.id).select("-password");
+
     if (user) {
       res.json({
         success: true,
@@ -177,20 +178,20 @@ const getCurrentUser = async (req, res) => {
           travelStatus: user.travelStatus,
           online: user.online,
           lastSeen: user.lastSeen,
-          friends: user.friends || []
-        }
+          friends: user.friends || [],
+        },
       });
     } else {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
   } catch (error) {
-    console.error('Error in getCurrentUser:', error);
+    console.error("Error in getCurrentUser:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: "Server error",
     });
   }
 };
@@ -198,49 +199,50 @@ const getCurrentUser = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
-    const { name, age, profession, bio, travelStatus, profileCompleted } = req.body;
+    const { name, age, profession, bio, travelStatus, profileCompleted } =
+      req.body;
 
     // Validate required fields
     if (!name || !age || !profession || !bio) {
       return res.status(400).json({
         success: false,
-        message: 'All profile fields are required'
+        message: "All profile fields are required",
       });
     }
 
     // Find user and update profile
     const user = await User.findById(req.user.id);
-    
+
     if (user) {
       user.name = name;
       user.age = age;
       user.profession = profession;
       user.bio = bio;
-      
+
       // Handle travelStatus if provided (now as an object)
       if (travelStatus) {
         user.travelStatus = travelStatus;
       }
-      
+
       user.profileCompleted = profileCompleted || true;
-      
+
       await user.save();
-      
+
       res.json({
         success: true,
-        message: 'Profile updated successfully'
+        message: "Profile updated successfully",
       });
     } else {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
   } catch (error) {
-    console.error('Error in updateProfile:', error);
+    console.error("Error in updateProfile:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: "Server error",
     });
   }
 };
@@ -248,23 +250,35 @@ const updateProfile = async (req, res) => {
 // Update travel status
 const updateTravelStatus = async (req, res) => {
   try {
-    const { boardingStation, destinationStation, travelDate, trainNumber, preferredClass, isActive } = req.body;
+    const {
+      boardingStation,
+      destinationStation,
+      travelDate,
+      trainNumber,
+      preferredClass,
+      isActive,
+    } = req.body;
 
-    console.log('Update Travel Status - Request body:', req.body);
-    
+    console.log("Update Travel Status - Request body:", req.body);
+
     // Find user
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     // Update travel status
     // Check if we're setting it to inactive/empty (unlisting)
-    if (isActive === false && boardingStation === "" && destinationStation === "" && travelDate === null) {
+    if (
+      isActive === false &&
+      boardingStation === "" &&
+      destinationStation === "" &&
+      travelDate === null
+    ) {
       // Complete reset of travel status
       user.travelStatus = {
         boardingStation: "",
@@ -272,71 +286,93 @@ const updateTravelStatus = async (req, res) => {
         travelDate: null,
         trainNumber: "",
         preferredClass: "",
-        isActive: false
+        isActive: false,
       };
-      
-      console.log('Update Travel Status - Resetting travel status to empty');
-    } else {      // Process the date to ensure it's stored consistently
+
+      console.log("Update Travel Status - Resetting travel status to empty");
+    } else {
+      // Process the date to ensure it's stored consistently
       let processedDate = travelDate;
-      
+
       if (travelDate) {
         try {
           // If it's a string date, convert to proper Date object
-          if (typeof travelDate === 'string') {
+          if (typeof travelDate === "string") {
             // Handle ISO format dates (YYYY-MM-DDTHH:mm:ss.sssZ)
-            if (travelDate.includes('T') || travelDate.includes('Z')) {
+            if (travelDate.includes("T") || travelDate.includes("Z")) {
               processedDate = new Date(travelDate);
             } else {
               processedDate = new Date(travelDate);
-              
+
               // If invalid date, try parsing from DD-MM-YYYY format
               if (isNaN(processedDate.getTime())) {
-                const dateParts = travelDate.split('-');
+                const dateParts = travelDate.split("-");
                 if (dateParts.length === 3) {
-                  processedDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+                  processedDate = new Date(
+                    `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`
+                  );
                 }
               }
             }
-            
-            console.log('Update Travel Status - Processed date:', {
+
+            console.log("Update Travel Status - Processed date:", {
               original: travelDate,
               processed: processedDate,
               iso: processedDate.toISOString(),
-              isValid: !isNaN(processedDate.getTime())
+              isValid: !isNaN(processedDate.getTime()),
             });
           }
         } catch (error) {
-          console.error('Error processing date:', error);
+          console.error("Error processing date:", error);
           // Keep original date if processing fails
           processedDate = travelDate;
         }
       }
-      
+
       // Normal update preserving existing values when not provided
       user.travelStatus = {
-        boardingStation: boardingStation !== undefined ? boardingStation.trim() : user.travelStatus.boardingStation,
-        destinationStation: destinationStation !== undefined ? destinationStation.trim() : user.travelStatus.destinationStation,
-        travelDate: processedDate !== undefined ? processedDate : user.travelStatus.travelDate,
-        trainNumber: trainNumber !== undefined ? trainNumber : user.travelStatus.trainNumber,
-        preferredClass: preferredClass !== undefined ? preferredClass : user.travelStatus.preferredClass,
-        isActive: isActive !== undefined ? isActive : user.travelStatus.isActive
+        boardingStation:
+          boardingStation !== undefined
+            ? boardingStation.trim()
+            : user.travelStatus.boardingStation,
+        destinationStation:
+          destinationStation !== undefined
+            ? destinationStation.trim()
+            : user.travelStatus.destinationStation,
+        travelDate:
+          processedDate !== undefined
+            ? processedDate
+            : user.travelStatus.travelDate,
+        trainNumber:
+          trainNumber !== undefined
+            ? trainNumber
+            : user.travelStatus.trainNumber,
+        preferredClass:
+          preferredClass !== undefined
+            ? preferredClass
+            : user.travelStatus.preferredClass,
+        isActive:
+          isActive !== undefined ? isActive : user.travelStatus.isActive,
       };
-      
-      console.log('Update Travel Status - New travel status:', user.travelStatus);
+
+      console.log(
+        "Update Travel Status - New travel status:",
+        user.travelStatus
+      );
     }
-    
+
     await user.save();
-    
+
     res.json({
       success: true,
-      message: 'Travel status updated successfully',
-      travelStatus: user.travelStatus
+      message: "Travel status updated successfully",
+      travelStatus: user.travelStatus,
     });
   } catch (error) {
-    console.error('Error in updateTravelStatus:', error);
+    console.error("Error in updateTravelStatus:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: "Server error",
     });
   }
 };
@@ -344,154 +380,127 @@ const updateTravelStatus = async (req, res) => {
 // Find travel buddies with matching travel status
 const findTravelBuddies = async (req, res) => {
   try {
-    // Get the search parameters from query string
     const { from, to, date } = req.query;
-    
-    console.log('Find Travel Buddies - Request params:', { from, to, date });
 
     if (!from || !to || !date) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required parameters: from, to, and date are required'
+        message: "Missing required parameters: from, to, and date are required",
       });
     }
 
-    // Find users with matching travel status
-    // Exclude the current user from results if authenticated
-    let excludeUserId = null;
-    let currentUser = null;
-    if (req.user) {
-      excludeUserId = req.user.id;
-      console.log('Find Travel Buddies - Excluding user:', excludeUserId);
-      
-      // Get current user for friendship check
-      currentUser = await User.findById(excludeUserId);
-    }    // Parse date from input format
-    console.log('Find Travel Buddies - Input date:', date);
-    
-    // Create date object from YYYY-MM-DD format (ISO date string)
-    let dateObj = new Date(date + 'T00:00:00.000Z');
-    
-    console.log('Find Travel Buddies - Parsed date object:', dateObj);
-    
-    // If parsing failed, try alternative parsing methods
-    if (isNaN(dateObj.getTime())) {
-      // Try parsing as DD-MM-YYYY format (fallback for legacy support)
-      const dateParts = date.split('-');
-      if (dateParts.length === 3) {
-        // Check if it's DD-MM-YYYY or YYYY-MM-DD
-        if (dateParts[0].length === 4) {
-          // Already YYYY-MM-DD
-          dateObj = new Date(`${dateParts[0]}-${dateParts[1]}-${dateParts[2]}T00:00:00.000Z`);
-        } else {
-          // Convert from DD-MM-YYYY to YYYY-MM-DD
-          dateObj = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T00:00:00.000Z`);
-        }
-        console.log('Find Travel Buddies - Fallback parsing result:', dateObj);
+    // Try parsing the date input
+    let parsedDate = new Date(date);
+    if (isNaN(parsedDate)) {
+      // Try DD-MM-YYYY
+      const parts = date.split("-");
+      if (parts.length === 3 && parts[0].length !== 4) {
+        parsedDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
       }
     }
-    
-    if (isNaN(dateObj.getTime())) {
+
+    if (isNaN(parsedDate)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid date format. Please use YYYY-MM-DD format.'
+        message: "Invalid date format. Use YYYY-MM-DD or DD-MM-YYYY.",
       });
     }
-    
-    // Create date range for the entire day (local time)
-    const startOfDay = new Date(dateObj);
+
+    // Build the start and end of day
+    const startOfDay = new Date(parsedDate);
     startOfDay.setUTCHours(0, 0, 0, 0);
-    
-    const endOfDay = new Date(dateObj);
+
+    const endOfDay = new Date(parsedDate);
     endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Get all station codes for the cities that match 'from' and 'to' stations
+    const fromStationCodes = getAllStationCodesForMatchingCities(from);
+    const toStationCodes = getAllStationCodesForMatchingCities(to);
+
+    console.log(`Finding buddies for:
+      From: ${from} -> Cities with stations: ${fromStationCodes.join(', ')}
+      To: ${to} -> Cities with stations: ${toStationCodes.join(', ')}
+      Date: ${parsedDate.toDateString()}`);
+
+    // Create regex patterns for all station codes in the respective cities
+    const fromRegexPattern = fromStationCodes.map(code => `^${code}$`).join('|');
+    const toRegexPattern = toStationCodes.map(code => `^${code}$`).join('|');
     
-    console.log('Find Travel Buddies - Final date range:', {
-      input: date,
-      parsed: dateObj.toISOString(),
-      startOfDay: startOfDay.toISOString(),
-      endOfDay: endOfDay.toISOString()
-    });
+    const fromRegex = new RegExp(fromRegexPattern, "i");
+    const toRegex = new RegExp(toRegexPattern, "i");
 
-    // Log actual travel status data in the database
-    const sampleUsers = await User.find({ 'travelStatus.isActive': true })
-      .limit(5)
-      .select('username travelStatus');
-    
-    console.log('Find Travel Buddies - Sample user travel data:', 
-      sampleUsers.map(u => ({
-        username: u.username,
-        boardingStation: u.travelStatus.boardingStation,
-        destinationStation: u.travelStatus.destinationStation,
-        travelDate: u.travelStatus.travelDate,
-        isActive: u.travelStatus.isActive
-      }))
-    );
-
-    // Create case-insensitive regex for station names
-    const fromRegex = new RegExp(`^${from}$`, 'i');
-    const toRegex = new RegExp(`^${to}$`, 'i');
-
-    // Build the query
+    // Prepare query
     const query = {
-      _id: excludeUserId ? { $ne: excludeUserId } : { $exists: true },
-      'travelStatus.isActive': true
+      "travelStatus.isActive": true,
+      "travelStatus.boardingStation": fromRegex,
+      "travelStatus.destinationStation": toRegex,
+      "travelStatus.travelDate": { $gte: startOfDay, $lte: endOfDay },
     };
 
-    // Use regex for case-insensitive station matching
-    query['travelStatus.boardingStation'] = fromRegex;
-    query['travelStatus.destinationStation'] = toRegex;
+    if (req.user?.id) {
+      query._id = { $ne: req.user.id };
+    }
 
-    // Handle date comparison
-    // First find all users with active status
-    const activeUsers = await User.find(query).select('name username profession bio travelStatus friends');
-    
-    console.log(`Find Travel Buddies - Found ${activeUsers.length} users with matching stations`);    // Then filter by date manually to ensure exact date comparison
-    const matchingUsers = activeUsers.filter(user => {
-      if (!user.travelStatus || !user.travelStatus.travelDate) return false;
-      
-      const userTravelDate = new Date(user.travelStatus.travelDate);
-      
-      // Compare dates within the day range
-      return userTravelDate >= startOfDay && userTravelDate <= endOfDay;
-    });
-    
-    console.log(`Find Travel Buddies - After date filtering: ${matchingUsers.length} users match`);
+    const currentUser = req.user
+      ? await User.findById(req.user.id).select("friends")
+      : null;
 
-    // Return only necessary fields and add isFriend flag
-    const result = matchingUsers.map(user => {
-      // Check if this user is a friend of the current user
-      let isFriend = false;
-      
-      if (currentUser && currentUser.friends && currentUser.friends.length > 0) {
-        // Convert all IDs to strings for reliable comparison
-        const currentUserFriendIds = currentUser.friends.map(id => id.toString());
-        isFriend = currentUserFriendIds.includes(user._id.toString());
-      }
-      
+    const users = await User.find(query).select(
+      "name username profession bio travelStatus friends"
+    );
+
+    const result = users.map((user) => {
+      const isFriend =
+        currentUser?.friends?.some(
+          (fId) => fId.toString() === user._id.toString()
+        ) || false;
+
+      // Determine if this is an exact station match or city match
+      const isExactFromMatch = user.travelStatus.boardingStation.toLowerCase() === from.toLowerCase();
+      const isExactToMatch = user.travelStatus.destinationStation.toLowerCase() === to.toLowerCase();
+      const matchType = (isExactFromMatch && isExactToMatch) ? 'exact' : 'city';
+
       return {
         _id: user._id,
         username: user.username,
         name: user.name,
         profession: user.profession,
         bio: user.bio,
-        isFriend, // Include friendship status
+        isFriend,
+        matchType, // 'exact' for same station, 'city' for same city
         travelDetails: {
+          boardingStation: user.travelStatus.boardingStation,
+          destinationStation: user.travelStatus.destinationStation,
           trainNumber: user.travelStatus.trainNumber,
-          preferredClass: user.travelStatus.preferredClass
-        }
+          preferredClass: user.travelStatus.preferredClass,
+          travelDate: user.travelStatus.travelDate,
+        },
       };
     });
 
-    res.json({
-      success: true,
-      count: result.length,
-      data: result
+    // Sort results to show exact matches first, then city matches
+    result.sort((a, b) => {
+      if (a.matchType === 'exact' && b.matchType === 'city') return -1;
+      if (a.matchType === 'city' && b.matchType === 'exact') return 1;
+      return 0;
+    });
+
+    res.json({ 
+      success: true, 
+      count: result.length, 
+      data: result,
+      searchInfo: {
+        fromStations: fromStationCodes,
+        toStations: toStationCodes,
+        exactMatches: result.filter(r => r.matchType === 'exact').length,
+        cityMatches: result.filter(r => r.matchType === 'city').length,
+      }
     });
   } catch (error) {
-    console.error('Error in findTravelBuddies:', error);
+    console.error("Error in findTravelBuddies:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: "Server error",
     });
   }
 };
@@ -502,24 +511,24 @@ const getUserById = async (req, res) => {
     const userId = req.params.id;
 
     // Find user by ID and exclude password
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
-    console.error('Error in getUserById:', error);
+    console.error("Error in getUserById:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: "Server error",
     });
   }
 };
@@ -530,46 +539,46 @@ const getUserFriends = async (req, res) => {
     const userId = req.user.id;
 
     // Find the user and get their friends array
-    const user = await User.findById(userId).select('friends');
-    
+    const user = await User.findById(userId).select("friends");
+
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     if (!user.friends || user.friends.length === 0) {
       return res.json({
         success: true,
-        data: []
+        data: [],
       });
     }
 
     // Fetch details for each friend
     const friends = await User.find({
-      _id: { $in: user.friends }
-    }).select('-password');
+      _id: { $in: user.friends },
+    }).select("-password");
 
     // Return friends with relevant fields
-    const friendsData = friends.map(friend => ({
+    const friendsData = friends.map((friend) => ({
       _id: friend._id,
       username: friend.username,
       name: friend.name,
       profession: friend.profession,
       online: friend.online,
-      lastSeen: friend.lastSeen
+      lastSeen: friend.lastSeen,
     }));
 
     res.json({
       success: true,
-      data: friendsData
+      data: friendsData,
     });
   } catch (error) {
-    console.error('Error in getUserFriends:', error);
+    console.error("Error in getUserFriends:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: "Server error",
     });
   }
 };
@@ -583,5 +592,5 @@ module.exports = {
   updateTravelStatus,
   findTravelBuddies,
   getUserById,
-  getUserFriends
+  getUserFriends,
 };
