@@ -14,12 +14,14 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String,
     maxlength: 200,
-  },
-  travelStatus: {
+  },  travelStatus: {
     boardingStation: { type: String, default: "" },
+    boardingStationName: { type: String, default: "" },
     destinationStation: { type: String, default: "" },
+    destinationStationName: { type: String, default: "" },
     travelDate: { type: Date },
     trainNumber: { type: String, default: "" },
+    trainName: { type: String, default: "" },
     preferredClass: { type: String, default: "" },
     isActive: { type: Boolean, default: false },
   },

@@ -48,11 +48,15 @@ const registerUser = async (req, res) => {
       name,
       age,
       profession,
-      bio,
-      travelStatus: travelStatus || {
+      bio,      travelStatus: travelStatus || {
         boardingStation: "",
+        boardingStationName: "",
         destinationStation: "",
+        destinationStationName: "",
         travelDate: null,
+        trainNumber: "",
+        trainName: "",
+        preferredClass: "",
         isActive: false,
       },
       online: true,
@@ -249,17 +253,48 @@ const updateProfile = async (req, res) => {
 
 // Update travel status
 const updateTravelStatus = async (req, res) => {
-  try {
-    const {
+  try {    const {
       boardingStation,
+      boardingStationName,
       destinationStation,
+      destinationStationName,
       travelDate,
       trainNumber,
+      trainName,
       preferredClass,
       isActive,
-    } = req.body;
-
-    console.log("Update Travel Status - Request body:", req.body);
+    } = req.body;console.log("Update Travel Status - Request body:", req.body);    // Validate travel status data if the user is listing themselves (isActive = true)
+    if (isActive === true) {
+      const errors = [];
+      
+      if (!boardingStation) {
+        errors.push("Boarding station is required");
+      }
+      
+      if (!destinationStation) {
+        errors.push("Destination station is required");
+      }
+      
+      if (!travelDate) {
+        errors.push("Travel date is required");
+      }
+      
+      if (!trainNumber) {
+        errors.push("Train number is required");
+      }
+      
+      if (!preferredClass) {
+        errors.push("Preferred class is required");
+      }
+      
+      if (errors.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation failed",
+          errors: errors,
+        });
+      }
+    }
 
     // Find user
     const user = await User.findById(req.user.id);
@@ -278,13 +313,15 @@ const updateTravelStatus = async (req, res) => {
       boardingStation === "" &&
       destinationStation === "" &&
       travelDate === null
-    ) {
-      // Complete reset of travel status
+    ) {      // Complete reset of travel status
       user.travelStatus = {
         boardingStation: "",
+        boardingStationName: "",
         destinationStation: "",
+        destinationStationName: "",
         travelDate: null,
         trainNumber: "",
+        trainName: "",
         preferredClass: "",
         isActive: false,
       };
@@ -327,18 +364,24 @@ const updateTravelStatus = async (req, res) => {
           // Keep original date if processing fails
           processedDate = travelDate;
         }
-      }
-
-      // Normal update preserving existing values when not provided
+      }      // Normal update preserving existing values when not provided
       user.travelStatus = {
         boardingStation:
           boardingStation !== undefined
             ? boardingStation.trim()
             : user.travelStatus.boardingStation,
+        boardingStationName:
+          boardingStationName !== undefined
+            ? boardingStationName.trim()
+            : user.travelStatus.boardingStationName || "",
         destinationStation:
           destinationStation !== undefined
             ? destinationStation.trim()
             : user.travelStatus.destinationStation,
+        destinationStationName:
+          destinationStationName !== undefined
+            ? destinationStationName.trim()
+            : user.travelStatus.destinationStationName || "",
         travelDate:
           processedDate !== undefined
             ? processedDate
@@ -347,6 +390,10 @@ const updateTravelStatus = async (req, res) => {
           trainNumber !== undefined
             ? trainNumber
             : user.travelStatus.trainNumber,
+        trainName:
+          trainName !== undefined
+            ? trainName
+            : user.travelStatus.trainName || "",
         preferredClass:
           preferredClass !== undefined
             ? preferredClass
@@ -458,20 +505,20 @@ const findTravelBuddies = async (req, res) => {
       // Determine if this is an exact station match or city match
       const isExactFromMatch = user.travelStatus.boardingStation.toLowerCase() === from.toLowerCase();
       const isExactToMatch = user.travelStatus.destinationStation.toLowerCase() === to.toLowerCase();
-      const matchType = (isExactFromMatch && isExactToMatch) ? 'exact' : 'city';
-
-      return {
+      const matchType = (isExactFromMatch && isExactToMatch) ? 'exact' : 'city';      return {
         _id: user._id,
         username: user.username,
         name: user.name,
         profession: user.profession,
         bio: user.bio,
-        isFriend,
-        matchType, // 'exact' for same station, 'city' for same city
+        isFriend,        matchType, // 'exact' for same station, 'city' for same city
         travelDetails: {
           boardingStation: user.travelStatus.boardingStation,
+          boardingStationName: user.travelStatus.boardingStationName || "",
           destinationStation: user.travelStatus.destinationStation,
+          destinationStationName: user.travelStatus.destinationStationName || "",
           trainNumber: user.travelStatus.trainNumber,
+          trainName: user.travelStatus.trainName || "",
           preferredClass: user.travelStatus.preferredClass,
           travelDate: user.travelStatus.travelDate,
         },
