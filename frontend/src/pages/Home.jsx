@@ -5,13 +5,15 @@ import bg from '../assets/images/bg.jpg'
 
 const Home = () => {  return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat flex flex-col"
+      className="min-h-screen bg-cover bg-center bg-no-repeat relative"
       style={{
         backgroundImage: `url(${bg})`
       }}
     >
-      <Navbar/>
-      <div className="flex-1 flex items-center justify-center pt-16">
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navbar/>
+      </div>
+      <div className="min-h-screen flex items-center justify-center">
         <Hero/>
       </div>
     </div>

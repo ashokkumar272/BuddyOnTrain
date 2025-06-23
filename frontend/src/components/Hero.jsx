@@ -16,7 +16,6 @@ const Hero = () => {
     <div className={`flex flex-col items-center relative w-full ${
       bothVisible ? 'lg:max-w-none' : 'max-w-6xl'
     } mx-auto px-4 gap-4`}>
-      {/* <ViewSwitcher /> */}
       {onlyBuddies ? (
         // When only buddy suggestions are visible, show SearchForm at top and suggestions full width below
         <>
@@ -29,7 +28,7 @@ const Hero = () => {
         </>
       ) : (
         // Normal layout for train results or both visible
-        <div className={`flex flex-col lg:flex-row items-center lg:items-start w-full ${
+        <div className={`flex flex-col lg:flex-row items-center m-auto lg:items-start w-full ${
           bothVisible ? 'lg:gap-6' : 'lg:gap-0'
         } ${
           bothVisible ? 'lg:justify-center' : 'lg:justify-around'

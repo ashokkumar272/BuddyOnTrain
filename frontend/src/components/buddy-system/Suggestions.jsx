@@ -7,7 +7,7 @@ const Suggestions = ({ suggestions, setSuggestions }) => {
 
   console.log("Rendering Suggestions with buddies:", buddies);
   return (
-    <div className="w-full py-1 rounded-lg shadow-md">
+    <div className="w-full py-40 rounded-lg shadow-md">
       <div className="flex justify-between p-4 md:p-6 bg-gray-100 rounded-lg shadow-md">
         <h2 className="text-lg font-semibold">Suggestions</h2>
         <div className="flex space-x-2">

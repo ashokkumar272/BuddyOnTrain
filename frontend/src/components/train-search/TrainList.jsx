@@ -24,9 +24,8 @@ const TrainList = () => {
   const hasCollapsedSearchBox = isSmallScreen && trains && trains.length > 0;
   
   return (
-    <div className={hasCollapsedSearchBox ? 'pt-20' : ''}>
-      {trains.length > 0 ? (
-        <ul className={`h-[calc(100vh-150px)] lg:h-[calc(100vh-154px)] overflow-y-auto shadow-md rounded-lg`}>
+    <div className="h-[100vh]">      {trains.length > 0 ? (
+        <ul className={`h-[100%] pt-32 lg:pt-36 overflow-y-auto shadow-md rounded-lg`}>
           {trains.map((train) => (
             <TrainCard key={train.train_number} train={train} />
           ))}

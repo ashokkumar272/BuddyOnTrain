@@ -27,10 +27,9 @@ const SearchForm = () => {  const {
     searchInitiated,
     setSearchInitiated,
     suggestions,
-  } = useTrainContext();
-  // Check if search results are showing (either trains or buddy suggestions)
+  } = useTrainContext();  // Check if search results are showing (either trains or buddy suggestions)
   const hasSearchResults = (showTrainResults && trains.length > 0) || suggestions;
-    // State to control form visibility on small screens
+    // State to control form visibility
   const [isFormCollapsed, setIsFormCollapsed] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -48,15 +47,14 @@ const SearchForm = () => {  const {
 
     // Cleanup
     return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-  // Auto-collapse form on small screens when any search is initiated
+  }, []);  // Auto-collapse form when any search is initiated (only on small screens)
   useEffect(() => {
     if (searchInitiated && isSmallScreen) {
       setIsFormCollapsed(true);
     } else if (!searchInitiated) {
       setIsFormCollapsed(false);
     }
-  }, [searchInitiated, isSmallScreen]);  const handleSearchTrains = (e) => {
+  }, [searchInitiated, isSmallScreen]);const handleSearchTrains = (e) => {
     e.preventDefault();
     setShowTrainResults(true);
     toggleView("trains");
@@ -67,8 +65,7 @@ const SearchForm = () => {  const {
     e.preventDefault();
     toggleView("buddies");
     findBuddies();
-  };
-  // Show collapsed bar on small screens when any search has been initiated
+  };  // Show collapsed bar when any search has been initiated (only on small screens)
   const shouldShowCollapsedBar = searchInitiated && isSmallScreen;
   // Render collapsed search bar for small screens with results
   if (shouldShowCollapsedBar && isFormCollapsed) {
@@ -80,14 +77,14 @@ const SearchForm = () => {  const {
         day: 'numeric',
         year: 'numeric'
       });    };    return (
-      <div className="fixed top-16 left-0 right-0 z-[90] p-4">
+      <div className="fixed top-14 lg:top-16 left-0 right-0 z-[50] p-4 bg-transparent">
         <button
           onClick={() => {
             setIsFormCollapsed(false);
             // Reset search initiated when form is expanded to allow new searches
             setSearchInitiated(false);
           }}
-          className="w-full p-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-300/50 hover:shadow-xl transition-all flex items-center justify-between group"
+          className="w-full p-2 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-300/50 hover:shadow-xl transition-all flex items-center justify-between group max-w-6xl mx-auto"
         >
           <div className="flex items-center gap-3 text-gray-700">
             <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
@@ -115,9 +112,8 @@ const SearchForm = () => {  const {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
-        </button>
-        {error && (
-          <div className="mt-4 text-red-600 text-center bg-red-50 border border-red-200 rounded-lg p-3">
+        </button>        {error && (
+          <div className="mt-4 text-red-600 text-center bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-lg p-3 max-w-6xl mx-auto">
             <svg
               className="w-5 h-5 inline mr-2"
               fill="currentColor"
@@ -134,11 +130,12 @@ const SearchForm = () => {  const {
         )}
       </div>
     );
-  }
-  return (
-    <div className="w-full lg:w-auto relative z-[100]">      {/* Collapse button for small screens when search has been initiated */}
+  }  return (
+    <div className={`fixed left-0 right-0 z-[100] bg-transparent ${
+      hasSearchResults ? 'top-14 lg:top-16' : 'top-0 bottom-0 flex items-center justify-center'
+    }`}>{/* Collapse button when search has been initiated */}
       {shouldShowCollapsedBar && !isFormCollapsed && (
-        <div className="flex justify-end mb-2 lg:hidden">
+        <div className="flex justify-end mb-2">
           <button
             onClick={() => setIsFormCollapsed(true)}
             className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
@@ -149,11 +146,11 @@ const SearchForm = () => {  const {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
             </svg>
           </button>
-        </div>
-      )}        <form
+        </div>      )}
+      <form
         className={`flex flex-col lg:flex-row gap-4 justify-center items-stretch ${
-          hasSearchResults ? "p-3 md:p-4" : "p-4 md:p-6 lg:p-8"
-        } bg-white/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-300/50 hover:shadow-md transition-all w-full`}
+          hasSearchResults ? "p-3 md:p-4 mt-4" : "p-4 md:p-6 lg:p-8"
+        } bg-white/80 backdrop-blur-md rounded-xl shadow-lg border border-gray-300/50 hover:shadow-xl transition-all w-full max-w-6xl mx-auto`}
         onSubmit={handleSearchTrains}
       >{/* Input fields in column layout for small screens, row for larger screens */}
         <div className="flex flex-col md:flex-row lg:flex-row gap-3 md:gap-4 w-full">          
@@ -167,7 +164,7 @@ const SearchForm = () => {  const {
             }}
             placeholder="Boarding Station"
             className={`border border-gray-300/50 bg-white/60 backdrop-blur-sm ${
-              hasSearchResults ? "h-12" : "h-16 lg:h-16"
+              hasSearchResults ? "h-10" : "h-12 lg:h-16"
             } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:flex-1 shadow-sm placeholder-gray-500`}
           />
           <StationInput
@@ -180,13 +177,13 @@ const SearchForm = () => {  const {
             }}
             placeholder="Destination Station"
             className={`border border-gray-300/50 bg-white/60 backdrop-blur-sm ${
-              hasSearchResults ? "h-12" : "h-16 lg:h-16"
+              hasSearchResults ? "h-10" : "h-12 lg:h-16"
             } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:flex-1 shadow-sm placeholder-gray-500`}
           />
           <input
             onChange={(e) => setSelectedDate(e.target.value)}
             className={`border border-gray-300/50 bg-white/60 backdrop-blur-sm ${
-              hasSearchResults ? "h-12" : "h-16 lg:h-16"
+              hasSearchResults ? "h-10" : "h-12 lg:h-16"
             } p-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-full lg:w-48 lg:flex-shrink-0 shadow-sm`}
             value={selectedDate}
             type="date"
@@ -197,10 +194,11 @@ const SearchForm = () => {  const {
           className={`flex flex-col sm:flex-row gap-3 w-full lg:w-auto lg:flex-shrink-0 justify-center ${
             hasSearchResults ? "mt-1 lg:mt-0" : "mt-2 lg:mt-0"
           }`}
-        ><button
+        >
+          <button
             onClick={handleSearchTrains}
             className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold px-6 sm:px-10 ${
-              hasSearchResults ? "h-12 py-0" : "py-4 lg:h-16 lg:py-0"
+              hasSearchResults ? "h-10 py-0" : "py-3 lg:h-16 lg:py-0"
             } rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg transform hover:scale-105 w-full sm:w-auto flex items-center justify-center`}
             type="button"
             disabled={loading}
@@ -209,17 +207,16 @@ const SearchForm = () => {  const {
           </button><button
             onClick={handleFindBuddy}
             className={`bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold px-6 sm:px-10 ${
-              hasSearchResults ? "h-12 py-0" : "py-4 lg:h-16 lg:py-0"
+              hasSearchResults ? "h-10 py-0" : "py-3 lg:h-16 lg:py-0"
             } rounded-xl hover:from-green-700 hover:to-green-800 transition-all disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed shadow-lg transform hover:scale-105 w-full sm:w-auto flex items-center justify-center`}
             type="button"
             disabled={loading}
           >
-            {loading ? "Finding..." : "Find Buddy"}
-          </button>
+            {loading ? "Finding..." : "Find Buddy"}          </button>
         </div>
       </form>
       {error && (
-        <div className="mt-4 text-red-600 text-center bg-red-50 border border-red-200 rounded-lg p-3">
+        <div className="mt-4 text-red-600 text-center bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-lg p-3 max-w-6xl mx-auto">
           <svg
             className="w-5 h-5 inline mr-2"
             fill="currentColor"
