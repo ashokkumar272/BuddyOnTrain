@@ -5,8 +5,13 @@ const {
   getStationsByCity, 
   getAllCities,
   getStationByCode,
-  getCityByStation
+  getCityByStation,
+  getStationDataHealth
 } = require("../controllers/stationController");
+
+// Health check endpoint for railway stations data
+// GET /api/stations/health
+router.get('/health', getStationDataHealth);
 
 // Get station suggestions based on search query
 // GET /api/stations/suggestions?city=delhi or /api/stations/suggestions?q=delhi

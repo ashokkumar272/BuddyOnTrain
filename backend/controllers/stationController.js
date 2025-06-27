@@ -22,6 +22,18 @@ const getStationSuggestions = async (req, res) => {
   try {
     const suggestions = searchStations(query, 15);
     
+    if (suggestions.length === 0) {
+      return res.json({
+        status: true,
+        message: "No stations found for the search query",
+        data: {
+          searchTerm: query,
+          suggestions: [],
+          totalFound: 0
+        }
+      });
+    }
+    
     // Group by city for better organization
     const groupedSuggestions = {};
     suggestions.forEach(station => {
@@ -43,19 +55,19 @@ const getStationSuggestions = async (req, res) => {
 
     res.json({
       status: true,
-      message: "Success",
+      message: "Station suggestions fetched successfully",
       data: {
         searchTerm: query,
         suggestions: result,
         totalFound: suggestions.length
       }
     });
-
   } catch (error) {
     console.error('Error getting station suggestions:', error);
     res.status(500).json({
       status: false,
-      message: "Internal server error"
+      message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -225,10 +237,44 @@ const getCityByStation = async (req, res) => {
   }
 };
 
+// Health check endpoint to verify railway stations data is loaded
+const getStationDataHealth = async (req, res) => {
+  try {
+    const { loadRailwayStations } = require('../utils/railwayStations');
+    const data = loadRailwayStations();
+    
+    const cities = Object.keys(data.railway_stations_by_city || {});
+    const totalStations = cities.reduce((sum, city) => {
+      return sum + (data.railway_stations_by_city[city]?.length || 0);
+    }, 0);
+    
+    res.json({
+      status: true,
+      message: "Railway stations data health check",
+      data: {
+        isDataLoaded: !!data && !!data.railway_stations_by_city,
+        totalCities: cities.length,
+        totalStations: totalStations,
+        sampleCities: cities.slice(0, 5),
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error in health check:', error);
+    res.status(500).json({
+      status: false,
+      message: "Health check failed",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getStationSuggestions,
   getStationsByCity,
   getAllCities,
   getStationByCode,
-  getCityByStation
+  getCityByStation,
+  getStationDataHealth
 };

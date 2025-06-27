@@ -14,30 +14,36 @@ const Message = require('./models/Message');
 
 dotenv.config()
 connectToDB()
-const PORT = process.env.PORT || 5000; // Use port 5000 consistently
+
+// Initialize railway stations data at startup
+try {
+  const { loadRailwayStations } = require('./utils/railwayStations');
+  const stationData = loadRailwayStations();
+} catch (error) {
+  console.error('Failed to load railway stations data at startup:', error);
+}
+
+const PORT = process.env.PORT || 5000;
 
 const app = express()
 
-// Enhanced CORS configuration for mobile devices
 app.use(cors({
-  origin: '*', // Allow all origins for development
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false
 }))
 
-app.use(express.json()) // For parsing application/json
+app.use(express.json())
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('view engine', 'ejs')
-
 
 app.use('/api', trainRoute)
 app.use('/api/stations', stationRoute)
 app.use('/api/users', userRoute)
 app.use('/api/friends', friendRoute)
 app.use('/api/messages', messageRoute)
-
 
 //-------------------deployement-----------------------
 
@@ -55,72 +61,49 @@ if(process.env.NODE_ENV === 'production'){
 
 //-------------------deployement-----------------------
 
-// Create HTTP server
 const server = http.createServer(app);
 
-// Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all origins for simplicity
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
-// Online users map to track which users are connected
 const onlineUsers = new Map();
 
-// Handle socket connections
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
-  
   // Handle user joining
   socket.on('joinChat', (userId) => {
-    console.log(`User ${userId} joined chat with socket ID: ${socket.id}`);
     onlineUsers.set(userId, socket.id);
-    
-    // Notify friends that this user is online
     socket.broadcast.emit('userOnline', userId);
   });
   
   // Handle sending messages
   socket.on('sendMessage', async (message) => {
-    console.log('Message received:', message);
     try {
-      // Save message to database
       const newMessage = new Message({
         sender: message.sender,
         receiver: message.receiver,
         content: message.content,
         timestamp: new Date()
       });
-      
       await newMessage.save();
-      
-      // Get receiver's socket id
       const receiverSocketId = onlineUsers.get(message.receiver);
-      
-      // If receiver is online, send the message to them
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('receiveMessage', newMessage);
       }
-      
-      // Also send back to sender for confirmation
       socket.emit('messageSent', newMessage);
     } catch (error) {
-      console.error('Error saving message:', error);
       socket.emit('messageError', { error: 'Failed to send message' });
     }
   });
   
   // Handle user disconnection
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-    
-    // Find and remove the user from the online users map
     for (const [userId, socketId] of onlineUsers.entries()) {
       if (socketId === socket.id) {
         onlineUsers.delete(userId);
-        // Notify others this user is offline
         socket.broadcast.emit('userOffline', userId);
         break;
       }
@@ -129,7 +112,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
-    console.log(`Access from mobile using your computer's IP address on port ${PORT}`);
 });
 

@@ -288,7 +288,7 @@ const updateTravelStatus = async (req, res) => {
       trainName,
       preferredClass,
       isActive,
-    } = req.body;console.log("Update Travel Status - Request body:", req.body);    // Validate travel status data if the user is listing themselves (isActive = true)
+    } = req.body;    // Validate travel status data if the user is listing themselves (isActive = true)
     if (isActive === true) {
       const errors = [];
       
@@ -350,8 +350,6 @@ const updateTravelStatus = async (req, res) => {
         preferredClass: "",
         isActive: false,
       };
-
-      console.log("Update Travel Status - Resetting travel status to empty");
     } else {
       // Process the date to ensure it's stored consistently
       let processedDate = travelDate;
@@ -376,13 +374,6 @@ const updateTravelStatus = async (req, res) => {
                 }
               }
             }
-
-            console.log("Update Travel Status - Processed date:", {
-              original: travelDate,
-              processed: processedDate,
-              iso: processedDate.toISOString(),
-              isValid: !isNaN(processedDate.getTime()),
-            });
           }
         } catch (error) {
           console.error("Error processing date:", error);
@@ -426,11 +417,6 @@ const updateTravelStatus = async (req, res) => {
         isActive:
           isActive !== undefined ? isActive : user.travelStatus.isActive,
       };
-
-      console.log(
-        "Update Travel Status - New travel status:",
-        user.travelStatus
-      );
     }
 
     await user.save();
@@ -488,11 +474,6 @@ const findTravelBuddies = async (req, res) => {
     // Get all station codes for the cities that match 'from' and 'to' stations
     const fromStationCodes = getAllStationCodesForMatchingCities(from);
     const toStationCodes = getAllStationCodesForMatchingCities(to);
-
-    console.log(`Finding buddies for:
-      From: ${from} -> Cities with stations: ${fromStationCodes.join(', ')}
-      To: ${to} -> Cities with stations: ${toStationCodes.join(', ')}
-      Date: ${parsedDate.toDateString()}`);
 
     // Create regex patterns for all station codes in the respective cities
     const fromRegexPattern = fromStationCodes.map(code => `^${code}$`).join('|');
