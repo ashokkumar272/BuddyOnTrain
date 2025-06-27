@@ -77,7 +77,6 @@ const findTrains = async (req, res) => {
   } catch (error) {
     console.error('Error fetching train data:', error.message);
     console.error('Error details:', error.response?.data || error.message);
-    console.error('API URL used:', `https://cttrainsapi.confirmtkt.com/api/v1/trains/search?sourceStationCode=${from}&destinationStationCode=${to}&dateOfJourney=${train_date}`);
     
     // Return error response when API fails
     return res.status(500).json({

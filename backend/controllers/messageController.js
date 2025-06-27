@@ -3,6 +3,14 @@ const Message = require('../models/Message');
 // Get chat history between two users
 const getChatHistory = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const { userId } = req.params;
     const currentUserId = req.user.id;
 
@@ -38,6 +46,14 @@ const getChatHistory = async (req, res) => {
 // Send a message (for non-socket methods)
 const sendMessage = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const { receiverId, content } = req.body;
     const senderId = req.user.id;
 
@@ -74,6 +90,14 @@ const sendMessage = async (req, res) => {
 // Mark messages as read
 const markMessagesAsRead = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const { userId } = req.params;
     const currentUserId = req.user.id;
 

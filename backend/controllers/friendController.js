@@ -4,6 +4,14 @@ const User = require('../models/User');
 // Send a friend request
 const sendFriendRequest = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const senderId = req.user.id; // From auth middleware
     const { receiverId } = req.body;
 
@@ -62,6 +70,14 @@ const sendFriendRequest = async (req, res) => {
 // Get all friend requests for a user
 const getFriendRequests = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const userId = req.user.id;
 
     // Find all friend requests where user is the receiver
@@ -94,6 +110,14 @@ const getFriendRequests = async (req, res) => {
 // Respond to a friend request (accept or reject)
 const respondToFriendRequest = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const userId = req.user.id;
     const { requestId, status } = req.body;
 

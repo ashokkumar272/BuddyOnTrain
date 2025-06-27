@@ -166,6 +166,14 @@ const logoutUser = async (req, res) => {
 // Get current user
 const getCurrentUser = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const user = await User.findById(req.user.id).select("-password");
 
     if (user) {
@@ -203,6 +211,14 @@ const getCurrentUser = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const { name, age, profession, bio, travelStatus, profileCompleted } =
       req.body;
 
@@ -253,7 +269,16 @@ const updateProfile = async (req, res) => {
 
 // Update travel status
 const updateTravelStatus = async (req, res) => {
-  try {    const {
+  try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    const {
       boardingStation,
       boardingStationName,
       destinationStation,
@@ -583,6 +608,14 @@ const getUserById = async (req, res) => {
 // Get user's friends with details
 const getUserFriends = async (req, res) => {
   try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     const userId = req.user.id;
 
     // Find the user and get their friends array
