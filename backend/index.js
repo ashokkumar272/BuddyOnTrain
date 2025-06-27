@@ -32,15 +32,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs')
 
 
-app.get('/', (req, res)=>{
-    res.send("server running")
-})
-
 app.use('/api', trainRoute)
 app.use('/api/stations', stationRoute)
 app.use('/api/users', userRoute)
 app.use('/api/friends', friendRoute)
 app.use('/api/messages', messageRoute)
+
+
+//-------------------deployement-----------------------
+
+const __dirname1 = path.resolve();
+if(process.env.NODE_ENV === 'production'){
+  app.use(express.static(path.join(__dirname1, "frontend/dist")));
+  app.get('*',(req,res)=>{
+    res.sendFile(path.resolve(__dirname1, "frontend", "dist", "index.html"));
+  });
+} else {
+  app.get("/", (req,res)=>{
+    res.send("API is running successfully");
+  });
+}
+
+//-------------------deployement-----------------------
 
 // Create HTTP server
 const server = http.createServer(app);

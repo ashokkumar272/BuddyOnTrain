@@ -90,7 +90,8 @@ export const TrainProvider = ({ children }) => {
   });
 
   return trainsWithPriority;
-};  const searchTrains = async () => {
+};
+  const searchTrains = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
       return;
@@ -124,7 +125,8 @@ export const TrainProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };  const findBuddies = async () => {
+  };  
+  const findBuddies = async () => {
     if (!fromStationCode || !toStationCode || !selectedDate) {
       setError('Please select valid stations and date');
       return;
