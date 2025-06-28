@@ -10,7 +10,7 @@ const Home = () => {  return (
         backgroundImage: `url(${bg})`
       }}
     >
-      <div className="fixed top-0 left-0 right-0 z-50">
+      <div className="fixed top-0 left-0 right-0 z-[200]">
         <Navbar/>
       </div>
       <div className="min-h-screen flex items-center justify-center">

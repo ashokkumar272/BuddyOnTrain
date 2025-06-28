@@ -144,7 +144,7 @@ const Navbar = () => {
   }
 
   return (
-    <div className='fixed top-0 left-0 right-0 z-[100] shadow-md bg-white'>
+    <div className='fixed top-0 left-0 right-0 z-[999] shadow-md bg-white pointer-events-auto'>
       <div className='flex justify-between items-center py-4 px-6 container mx-auto'>
         <h2 className='text-2xl lg:text-4xl font-bold text-blue-600'>TrainBuddy</h2>
         <button
@@ -191,7 +191,7 @@ const Navbar = () => {
                 
                 {/* Notification Panel */}
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-[9999] overflow-hidden">
                     <div className="py-2 px-4 bg-gray-100 border-b border-gray-200">
                       <h3 className="text-sm font-semibold text-gray-700">Notifications</h3>
                     </div>
@@ -260,7 +260,7 @@ const Navbar = () => {
                   </svg>
                 </button>
                 {showProfileMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-[9999]">
                     <NavLink
                       to="/dashboard"
                       className="block py-2 px-4 text-gray-600 hover:text-blue-600"
