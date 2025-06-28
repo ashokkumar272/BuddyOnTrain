@@ -6,11 +6,8 @@ import io from 'socket.io-client';
 
 // Function to get the socket URL
 const getSocketURL = () => {
-  if (import.meta.env.DEV) {
-    const host = window.location.hostname;
-    return `http://${host}:4000`;
-  }
-  return 'http://localhost:4000';
+  // Use environment variable or fallback to deployed backend URL
+  return import.meta.env.VITE_SOCKET_URL || 'https://trainbuddy.onrender.com';
 };
 
 // Initialize WebSocket connection

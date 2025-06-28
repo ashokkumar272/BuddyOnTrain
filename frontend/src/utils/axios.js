@@ -1,16 +1,9 @@
 import axios from 'axios';
 
 // Function to get the appropriate base URL
-const getBaseURL = () => {  // In development, check if we're running on mobile/different device
-  if (import.meta.env.DEV) {
-    // For development, use the computer's IP address instead of localhost
-    // This will be dynamically set based on the current host
-    const host = window.location.hostname;
-    return `http://${host}:4000`; // Backend runs on port 4000
-  }
-  
-  // For production, use relative URLs or your production API URL
-  return 'http://localhost:4000';
+const getBaseURL = () => {
+  // Use environment variable or fallback to deployed backend URL
+  return import.meta.env.VITE_API_BASE_URL || 'https://trainbuddy.onrender.com';
 };
 
 // Create an instance of axios with a base URL
