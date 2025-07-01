@@ -200,8 +200,128 @@ const respondToFriendRequest = async (req, res) => {
   }
 };
 
+// Get user's friends list
+const getFriends = async (req, res) => {
+  try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    const userId = req.user.id;
+
+    // Get user with populated friends
+    const user = await User.findById(userId)
+      .populate('friends', 'username name profession bio online lastSeen')
+      .select('friends');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        friends: user.friends
+      }
+    });
+  } catch (error) {
+    console.error('Error in getFriends:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+// Remove a friend
+const removeFriend = async (req, res) => {
+  try {
+    // Check if req.user exists and has an id
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    const userId = req.user.id;
+    const { friendId } = req.body;
+
+    if (!friendId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Friend ID is required'
+      });
+    }
+
+    // Check if friend exists
+    const friend = await User.findById(friendId);
+    if (!friend) {
+      return res.status(404).json({
+        success: false,
+        message: 'Friend not found'
+      });
+    }
+
+    // Get current user
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if they are actually friends
+    const areFriends = currentUser.friends.includes(friendId) && friend.friends.includes(userId);
+    
+    if (!areFriends) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are not friends with this user'
+      });
+    }
+
+    // Remove each user from the other's friends list
+    currentUser.friends = currentUser.friends.filter(id => id.toString() !== friendId);
+    friend.friends = friend.friends.filter(id => id.toString() !== userId);
+
+    // Save both users
+    await currentUser.save();
+    await friend.save();
+
+    // Also remove any existing friend requests between them
+    await FriendRequest.deleteMany({
+      $or: [
+        { sender: userId, receiver: friendId },
+        { sender: friendId, receiver: userId }
+      ]
+    });
+
+    res.json({
+      success: true,
+      message: 'Friend removed successfully'
+    });
+  } catch (error) {
+    console.error('Error in removeFriend:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
 module.exports = {
   sendFriendRequest,
   getFriendRequests,
-  respondToFriendRequest
-}; 
+  respondToFriendRequest,
+  getFriends,
+  removeFriend
+};

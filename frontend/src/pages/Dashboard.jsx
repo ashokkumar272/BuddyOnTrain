@@ -122,6 +122,29 @@ const Dashboard = () => {
     }
   };
   
+  const handleRemoveFriend = async (friendId, friendName) => {
+    if (!window.confirm(`Are you sure you want to remove ${friendName} from your friends?`)) {
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.delete('/api/friends/remove', {
+        data: { friendId }
+      });
+      
+      if (response.data.success) {
+        // Remove the friend from the local state
+        setFriends(friends.filter(friend => friend._id !== friendId));
+        alert('Friend removed successfully!');
+      } else {
+        alert('Failed to remove friend. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      alert('An error occurred while removing friend. Please try again.');
+    }
+  };
+  
   const handleTravelStatusUpdate = (updatedTravelStatus) => {
     // Update the local user data with the new travel status
     setUserData(prevData => ({
@@ -374,13 +397,23 @@ const Dashboard = () => {
         
         {/* Friends List Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">My Friends 
-            {friends.length > 0 && 
-              <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                {friends.length}
-              </span>
-            }
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-700">My Friends 
+              {friends.length > 0 && 
+                <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                  {friends.length}
+                </span>
+              }
+            </h2>
+            {friends.length > 0 && (
+              <button
+                onClick={() => navigate('/friends')}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+              >
+                View All Friends
+              </button>
+            )}
+          </div>
           
           {loadingFriends ? (
             <div className="py-8 text-center">
@@ -406,15 +439,36 @@ const Dashboard = () => {
                         </span>
                       </div>
                     </div>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/chat/${friend._id}`);
-                      }}
-                      className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded transition-colors"
-                    >
-                      Chat
-                    </button>
+                    <div className="flex gap-2">                    <div className="flex gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/chat/${friend._id}`);
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded transition-colors"
+                      >
+                        Chat
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFriend(friend._id, friend.name || friend.username);
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFriend(friend._id, friend.name || friend.username);
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -430,4 +484,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

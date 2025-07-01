@@ -136,6 +136,40 @@ const Suggested = ({ id, name, profession, bio, isFriend: initialIsFriend, trave
     }
   };
 
+  const handleRemoveFriend = async () => {
+    if (!window.confirm(`Are you sure you want to remove ${name} from your friends?`)) {
+      return;
+    }
+
+    setInviting(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("Please login to remove friend");
+        setInviting(false);
+        return;
+      }
+
+      const response = await axiosInstance.delete('/api/friends/remove', {
+        data: { friendId: id }
+      });
+
+      if (response.data.success) {
+        setIsFriend(false);
+        setSuccessMessage('Friend removed successfully!');
+      } else {
+        setError(response.data.message || 'Failed to remove friend');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'An error occurred. Please try again.');
+    } finally {
+      setInviting(false);
+    }
+  };
+
   const viewProfile = () => navigate(`/user-profile/${id}`);
 
   const goToChat = (e) => {
@@ -154,12 +188,24 @@ const Suggested = ({ id, name, profession, bio, isFriend: initialIsFriend, trave
           </div>
           <div className='flex-shrink-0'>
             {isFriend ? (
-              <button
-                onClick={goToChat}
-                className='bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-1.5 rounded-md shadow-sm'
-              >
-                Chat
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={goToChat}
+                  className='bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1.5 rounded-md shadow-sm'
+                >
+                  Chat
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFriend();
+                  }}
+                  disabled={inviting}
+                  className='bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1.5 rounded-md shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed'
+                >
+                  {inviting ? 'Removing...' : 'Remove'}
+                </button>
+              </div>
             ) : (
               <button
                 onClick={(e) => {

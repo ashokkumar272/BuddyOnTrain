@@ -269,6 +269,13 @@ const Navbar = () => {
                       Dashboard
                     </NavLink>
                     <NavLink
+                      to="/friends"
+                      className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+                      onClick={toggleProfileMenu}
+                    >
+                      Friends
+                    </NavLink>
+                    <NavLink
                       to="/chats"
                       className="block py-2 px-4 text-gray-600 hover:text-blue-600"
                       onClick={toggleProfileMenu}
@@ -323,6 +330,13 @@ const Navbar = () => {
                     onClick={toggleProfileMenu}
                   >
                     Dashboard
+                  </NavLink>
+                  <NavLink
+                    to="/friends"
+                    className="block py-2 px-4 text-gray-600 hover:text-blue-600"
+                    onClick={toggleProfileMenu}
+                  >
+                    Friends
                   </NavLink>
                   <NavLink
                     to="/chats"

@@ -159,6 +159,34 @@ const UserProfile = () => {
     navigate(`/chat/${userId}`);
   };
 
+  const handleRemoveFriend = async () => {
+    if (!window.confirm('Are you sure you want to remove this friend?')) {
+      return;
+    }
+
+    setProcessingRequest(true);
+    
+    try {
+      const response = await axiosInstance.delete('/api/friends/remove', {
+        data: { friendId: userId }
+      });
+      
+      if (response.data.success) {
+        setRequestStatus('none');
+        setRequestId(null);
+        // Show a success message or update UI as needed
+        alert('Friend removed successfully!');
+      } else {
+        alert('Failed to remove friend. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      alert('An error occurred while removing friend. Please try again.');
+    } finally {
+      setProcessingRequest(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
@@ -254,6 +282,13 @@ const UserProfile = () => {
                   >
                     Chat
                   </button>
+                  <button
+                    onClick={handleRemoveFriend}
+                    disabled={processingRequest}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400"
+                  >
+                    {processingRequest ? 'Removing...' : 'Remove Friend'}
+                  </button>
                 </div>
               )}
             </div>
@@ -335,4 +370,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile; 
+export default UserProfile;
