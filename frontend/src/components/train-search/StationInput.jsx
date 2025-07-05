@@ -96,7 +96,13 @@ const StationInput = ({
   };
 
   // Handle station selection with both mouse and touch events
-  const handleStationSelect = (stationName, stationCode, cityName) => {
+  const handleStationSelect = (stationName, stationCode, cityName, event) => {
+    // Prevent event propagation to avoid conflicts
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
     const displayText = `${stationName} - ${stationCode}`;
     setInputValue(displayText);
     setSelectedStationCode(stationCode);
@@ -122,10 +128,10 @@ const StationInput = ({
 
   // Handle blur with delay to allow selection
   const handleBlur = () => {
-    // Delay hiding suggestions to allow for selection
+    // Increased delay to ensure click events can complete
     setTimeout(() => {
       setShowSuggestions(false);
-    }, 200);
+    }, 300);
   };
 
   return (    <div className="relative" ref={suggestionRef}>
@@ -159,8 +165,8 @@ const StationInput = ({
                 <div
                   key={`${cityIndex}-${stationIndex}`}
                   className="px-4 py-4 hover:bg-blue-50 active:bg-blue-100 cursor-pointer border-b border-gray-200/50 last:border-b-0 transition-colors duration-150 first:rounded-t-xl last:rounded-b-xl"
-                  onClick={() => handleStationSelect(station.stationName, station.stationCode, cityData.city)}
-                  onTouchStart={() => {}} // Enable touch events on mobile
+                  onMouseDown={(e) => handleStationSelect(station.stationName, station.stationCode, cityData.city, e)}
+                  onTouchStart={(e) => handleStationSelect(station.stationName, station.stationCode, cityData.city, e)}
                   style={{ 
                     minHeight: '48px', // Ensure minimum touch target size for mobile
                     WebkitTapHighlightColor: 'rgba(59, 130, 246, 0.1)' // Better tap feedback on iOS

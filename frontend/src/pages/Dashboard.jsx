@@ -449,15 +449,6 @@ const Dashboard = () => {
                       >
                         Chat
                       </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveFriend(friend._id, friend.name || friend.username);
-                        }}
-                        className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded transition-colors"
-                      >
-                        Remove
-                      </button>
                     </div>
                       <button 
                         onClick={(e) => {

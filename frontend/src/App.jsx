@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard"
 import UserProfile from "./pages/UserProfile"
 import ChatPage from "./pages/ChatPage"
 import FriendsPage from "./pages/FriendsPage"
+import LandingPage from "./pages/LandingPage"
 import { Routes, Route } from "react-router-dom";
 
 
@@ -16,6 +17,7 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element = {<Home/>}/>
+          <Route path="/landing" element = {<LandingPage/>}/>
           <Route path="/login" element ={<Login/>}/>
           <Route path="/profile-setup" element ={<ProfileSetup/>}/>
           <Route path="/dashboard" element ={<Dashboard/>}/>
