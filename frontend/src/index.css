@@ -2,17 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Landing Page Styles */
-.landing-section {
-  padding: 0;
-  margin: 0;
-}
-
-/* Only hero section should have full height */
-.landing-section#hero {
-  min-height: 100vh;
-}
-
 /* Smooth scrolling for the entire page */
 html {
   scroll-behavior: smooth;
